@@ -1,5 +1,12 @@
 # Test Running Agent
 
+![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+![Tests](https://img.shields.io/badge/tests-passing-brightgreen)
+![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue)
+![ESLint](https://img.shields.io/badge/code_style-eslint-purple)
+
 An intelligent automated test runner that monitors file changes and executes appropriate test suites based on coverage analysis, complexity monitoring, and development workflow integration. Features comprehensive support for multiple testing frameworks and seamless integration with development tools.
 
 ## 🚀 Quick Start
