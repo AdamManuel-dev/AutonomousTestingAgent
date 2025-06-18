@@ -70,7 +70,7 @@ export class CursorIntegration extends EventEmitter {
         client.close();
       }
       this.clients.clear();
-      
+
       this.wss.close(() => {
         console.log('Cursor integration server stopped');
       });
@@ -150,7 +150,7 @@ export class CursorIntegration extends EventEmitter {
    */
   private broadcast(message: CursorMessage): void {
     const messageStr = JSON.stringify(message);
-    
+
     for (const client of this.clients) {
       if (client.readyState === WebSocket.OPEN) {
         client.send(messageStr);

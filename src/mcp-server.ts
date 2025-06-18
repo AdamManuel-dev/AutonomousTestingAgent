@@ -2,10 +2,7 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { TestRunningAgent } from './Agent.js';
 import { ConfigLoader } from './utils/ConfigLoader.js';
 import { WorkflowOrchestrator } from './utils/WorkflowOrchestrator.js';
@@ -25,13 +22,14 @@ class TestRunningAgentMCPServer {
       {
         name: 'test-running-agent',
         version: '1.0.0',
-        description: 'Automated test runner that monitors file changes and intelligently runs appropriate test suites with coverage analysis',
+        description:
+          'Automated test runner that monitors file changes and intelligently runs appropriate test suites with coverage analysis',
       },
       {
         capabilities: {
           tools: {},
         },
-      }
+      },
     );
 
     this.setupHandlers();
@@ -54,14 +52,16 @@ class TestRunningAgentMCPServer {
         tools: [
           {
             name: 'run_tests',
-            description: 'Run test suites (Jest, Cypress, Storybook) for specific files. The agent intelligently selects which test suites to run based on the file types and coverage data. Use this when you want to test specific files after making changes.',
+            description:
+              'Run test suites (Jest, Cypress, Storybook) for specific files. The agent intelligently selects which test suites to run based on the file types and coverage data. Use this when you want to test specific files after making changes.',
             inputSchema: {
               type: 'object',
               properties: {
                 files: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: 'Array of file paths that changed (e.g., ["src/app.ts", "src/components/Button.tsx"])',
+                  description:
+                    'Array of file paths that changed (e.g., ["src/app.ts", "src/components/Button.tsx"])',
                 },
                 coverage: {
                   type: 'boolean',
@@ -74,7 +74,8 @@ class TestRunningAgentMCPServer {
           },
           {
             name: 'analyze_coverage',
-            description: 'Analyze current test coverage data and get recommendations for improving coverage. Shows which files have low coverage and suggests where to add tests. Use this to understand your project\'s test coverage status.',
+            description:
+              "Analyze current test coverage data and get recommendations for improving coverage. Shows which files have low coverage and suggests where to add tests. Use this to understand your project's test coverage status.",
             inputSchema: {
               type: 'object',
               properties: {},
@@ -82,26 +83,30 @@ class TestRunningAgentMCPServer {
           },
           {
             name: 'check_jira',
-            description: 'Check JIRA ticket status and requirements. Analyzes the ticket description for missing requirements and reviews comments for unaddressed requests. Automatically detects ticket from branch name if not provided. Use this to ensure all ticket requirements are met before pushing.',
+            description:
+              'Check JIRA ticket status and requirements. Analyzes the ticket description for missing requirements and reviews comments for unaddressed requests. Automatically detects ticket from branch name if not provided. Use this to ensure all ticket requirements are met before pushing.',
             inputSchema: {
               type: 'object',
               properties: {
                 ticketKey: {
                   type: 'string',
-                  description: 'JIRA ticket key like "DEV-1234" (optional, auto-detects from branch name)',
+                  description:
+                    'JIRA ticket key like "DEV-1234" (optional, auto-detects from branch name)',
                 },
               },
             },
           },
           {
             name: 'run_e2e',
-            description: 'Run end-to-end UI tests using Stagehand browser automation. Can run specific scenarios or all configured scenarios. Use this to test user workflows and UI interactions.',
+            description:
+              'Run end-to-end UI tests using Stagehand browser automation. Can run specific scenarios or all configured scenarios. Use this to test user workflows and UI interactions.',
             inputSchema: {
               type: 'object',
               properties: {
                 scenario: {
                   type: 'string',
-                  description: 'Name of specific scenario to run (optional, runs all if not specified)',
+                  description:
+                    'Name of specific scenario to run (optional, runs all if not specified)',
                 },
                 baseUrl: {
                   type: 'string',
@@ -112,7 +117,8 @@ class TestRunningAgentMCPServer {
           },
           {
             name: 'check_environments',
-            description: 'Check Jenkins deployment environments to see which branches are deployed where. Alerts about non-master branches in production-like environments. Use this before pushing to avoid deployment conflicts.',
+            description:
+              'Check Jenkins deployment environments to see which branches are deployed where. Alerts about non-master branches in production-like environments. Use this before pushing to avoid deployment conflicts.',
             inputSchema: {
               type: 'object',
               properties: {},
@@ -120,7 +126,8 @@ class TestRunningAgentMCPServer {
           },
           {
             name: 'generate_commit_message',
-            description: 'Generate an intelligent commit message based on current file changes and JIRA ticket information. Analyzes the changes and creates a descriptive commit message following conventional commit standards.',
+            description:
+              'Generate an intelligent commit message based on current file changes and JIRA ticket information. Analyzes the changes and creates a descriptive commit message following conventional commit standards.',
             inputSchema: {
               type: 'object',
               properties: {},
@@ -128,28 +135,61 @@ class TestRunningAgentMCPServer {
           },
           {
             name: 'check_git_status',
-            description: 'Check if your branch is up to date with origin and if master/main has new commits to merge. Detects potential merge conflicts and uncommitted changes. Use this before starting work or pushing changes.',
+            description:
+              'Check if your branch is up to date with origin and if master/main has new commits to merge. Detects potential merge conflicts and uncommitted changes. Use this before starting work or pushing changes.',
             inputSchema: {
               type: 'object',
               properties: {},
             },
           },
           {
+            name: 'check_github_pr',
+            description:
+              'Check GitHub pull request comments for unresolved action items, requested changes, and concerns. Analyzes recent changes against PR comments to determine resolution confidence. Use this to ensure all PR feedback has been addressed.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                branch: {
+                  type: 'string',
+                  description: 'Branch name to check (optional, uses current branch)',
+                },
+              },
+            },
+          },
+          {
+            name: 'analyze_pr_resolutions',
+            description:
+              'Analyze how well recent changes address GitHub PR comments. Returns confidence scores for each comment and overall resolution status. Use this to verify PR feedback has been properly addressed before merging.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                changedFiles: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Array of changed files to analyze against PR comments (optional, uses git diff)',
+                },
+              },
+            },
+          },
+          {
             name: 'start_watching',
-            description: 'Start the file watcher to automatically run tests when files change. The agent will monitor your project files and intelligently run the appropriate test suites based on what changed. Use this for continuous testing during development.',
+            description:
+              'Start the file watcher to automatically run tests when files change. The agent will monitor your project files and intelligently run the appropriate test suites based on what changed. Use this for continuous testing during development.',
             inputSchema: {
               type: 'object',
               properties: {
                 projectPath: {
                   type: 'string',
-                  description: 'Absolute path to project directory to watch (optional, uses configured project root)',
+                  description:
+                    'Absolute path to project directory to watch (optional, uses configured project root)',
                 },
               },
             },
           },
           {
             name: 'stop_watching',
-            description: 'Stop the file watcher. Use this when you\'re done with development and want to stop automatic test runs.',
+            description:
+              "Stop the file watcher. Use this when you're done with development and want to stop automatic test runs.",
             inputSchema: {
               type: 'object',
               properties: {},
@@ -157,7 +197,8 @@ class TestRunningAgentMCPServer {
           },
           {
             name: 'get_status',
-            description: 'Get the current status of the test running agent including: whether it\'s watching files, which features are enabled, current branch, and project configuration. Use this to check the agent\'s state.',
+            description:
+              "Get the current status of the test running agent including: whether it's watching files, which features are enabled, current branch, and project configuration. Use this to check the agent's state.",
             inputSchema: {
               type: 'object',
               properties: {},
@@ -165,21 +206,24 @@ class TestRunningAgentMCPServer {
           },
           {
             name: 'analyze_complexity',
-            description: 'Analyze cyclomatic complexity of TypeScript/JavaScript files. Shows complexity scores for functions, methods, and classes. Highlights functions with high complexity that may need refactoring. Use this to identify complex code that needs simplification.',
+            description:
+              'Analyze cyclomatic complexity of TypeScript/JavaScript files. Shows complexity scores for functions, methods, and classes. Highlights functions with high complexity that may need refactoring. Use this to identify complex code that needs simplification.',
             inputSchema: {
               type: 'object',
               properties: {
                 files: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: 'Array of file paths to analyze (e.g., ["src/utils/parser.ts"]) - if not provided, analyzes all changed files',
+                  description:
+                    'Array of file paths to analyze (e.g., ["src/utils/parser.ts"]) - if not provided, analyzes all changed files',
                 },
               },
             },
           },
           {
             name: 'compare_complexity',
-            description: 'Compare the cyclomatic complexity of a file between its current version and the previous git version. Shows if complexity increased or decreased. Use this to ensure refactoring actually reduces complexity.',
+            description:
+              'Compare the cyclomatic complexity of a file between its current version and the previous git version. Shows if complexity increased or decreased. Use this to ensure refactoring actually reduces complexity.',
             inputSchema: {
               type: 'object',
               properties: {
@@ -194,7 +238,8 @@ class TestRunningAgentMCPServer {
           // Optimized Workflow Tools - Batch multiple operations
           {
             name: 'workflow_dev_setup',
-            description: 'Complete development setup workflow that runs all status checks in parallel and starts file watching. Combines check_git_status + check_environments + check_jira + start_watching. Use this at the beginning of your development session.',
+            description:
+              'Complete development setup workflow that runs all status checks in parallel and starts file watching. Combines check_git_status + check_environments + check_jira + start_watching. Use this at the beginning of your development session.',
             inputSchema: {
               type: 'object',
               properties: {
@@ -207,14 +252,16 @@ class TestRunningAgentMCPServer {
           },
           {
             name: 'workflow_test_suite',
-            description: 'Complete testing workflow that runs tests, analyzes coverage, and checks complexity in parallel. Combines run_tests + analyze_coverage + analyze_complexity. Optionally includes E2E tests. Use this for comprehensive testing.',
+            description:
+              'Complete testing workflow that runs tests, analyzes coverage, and checks complexity in parallel. Combines run_tests + analyze_coverage + analyze_complexity. Optionally includes E2E tests. Use this for comprehensive testing.',
             inputSchema: {
               type: 'object',
               properties: {
                 files: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: 'Array of file paths that changed (e.g., ["src/app.ts", "src/components/Button.tsx"])',
+                  description:
+                    'Array of file paths that changed (e.g., ["src/app.ts", "src/components/Button.tsx"])',
                 },
                 includeE2E: {
                   type: 'boolean',
@@ -227,7 +274,8 @@ class TestRunningAgentMCPServer {
           },
           {
             name: 'workflow_pre_commit',
-            description: 'Pre-commit validation workflow that checks project status, validates JIRA ticket, and generates commit message. Combines check_git_status + check_jira + check_environments + generate_commit_message. Use this before committing.',
+            description:
+              'Pre-commit validation workflow that checks project status, validates JIRA ticket, and generates commit message. Combines check_git_status + check_jira + check_environments + generate_commit_message. Use this before committing.',
             inputSchema: {
               type: 'object',
               properties: {},
@@ -235,7 +283,8 @@ class TestRunningAgentMCPServer {
           },
           {
             name: 'workflow_health_check',
-            description: 'Complete project health check that runs all status checks in parallel. Combines get_status + check_git_status + check_environments + check_jira + analyze_coverage. Use this to get a complete project overview.',
+            description:
+              'Complete project health check that runs all status checks in parallel. Combines get_status + check_git_status + check_environments + check_jira + analyze_coverage. Use this to get a complete project overview.',
             inputSchema: {
               type: 'object',
               properties: {},
@@ -252,13 +301,13 @@ class TestRunningAgentMCPServer {
       if (request.params.name === 'start_watching' && request.params.arguments) {
         projectPath = (request.params.arguments as any).projectPath;
       }
-      
+
       const agent = await this.initializeAgent(projectPath);
 
       switch (request.params.name) {
         case 'run_tests': {
           const { files = [], coverage = true } = request.params.arguments as any;
-          
+
           if (files.length === 0) {
             return {
               content: [
@@ -283,26 +332,26 @@ class TestRunningAgentMCPServer {
             testDecision.suites,
             changes,
             agent['config'].projectRoot,
-            coverage
+            coverage,
           );
 
           // Format response in a user-friendly way
           let response = `🧪 Test Results\n\n`;
           response += `Strategy: ${testDecision.reason}\n`;
-          
+
           if (testDecision.coverageGaps && testDecision.coverageGaps.length > 0) {
             response += `\n⚠️ Low coverage files: ${testDecision.coverageGaps.join(', ')}\n`;
           }
-          
+
           response += `\n📊 Test Suites Run:\n`;
           for (const result of results) {
             const icon = result.success ? '✅' : '❌';
             response += `${icon} ${result.suite} - ${result.duration}ms\n`;
-            
+
             if (!result.success && result.output) {
               response += `   Error: ${result.output.substring(0, 200)}...\n`;
             }
-            
+
             if (result.coverage) {
               response += `   Coverage: ${result.coverage.lines.percentage.toFixed(1)}% lines, ${result.coverage.branches.percentage.toFixed(1)}% branches\n`;
             }
@@ -321,7 +370,7 @@ class TestRunningAgentMCPServer {
         case 'analyze_coverage': {
           const coverageAnalyzer = agent['coverageAnalyzer'];
           const coverage = await coverageAnalyzer.loadCoverageFromFile(
-            agent['config'].coverage?.persistPath || 'coverage'
+            agent['config'].coverage?.persistPath || 'coverage',
           );
 
           if (!coverage) {
@@ -341,15 +390,19 @@ class TestRunningAgentMCPServer {
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({
-                  coverage: {
-                    lines: coverage.lines.percentage,
-                    statements: coverage.statements.percentage,
-                    functions: coverage.functions.percentage,
-                    branches: coverage.branches.percentage,
+                text: JSON.stringify(
+                  {
+                    coverage: {
+                      lines: coverage.lines.percentage,
+                      statements: coverage.statements.percentage,
+                      functions: coverage.functions.percentage,
+                      branches: coverage.branches.percentage,
+                    },
+                    recommendations,
                   },
-                  recommendations,
-                }, null, 2),
+                  null,
+                  2,
+                ),
               },
             ],
           };
@@ -369,7 +422,7 @@ class TestRunningAgentMCPServer {
           }
 
           const analysis = await jiraIntegration.analyzeTicketCompleteness();
-          
+
           return {
             content: [
               {
@@ -383,7 +436,7 @@ class TestRunningAgentMCPServer {
         case 'run_e2e': {
           const { scenario, baseUrl } = request.params.arguments as any;
           const stagehandRunner = agent['stagehandRunner'];
-          
+
           if (!stagehandRunner) {
             return {
               content: [
@@ -439,13 +492,18 @@ class TestRunningAgentMCPServer {
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({
-                  allEnvironments: environments,
-                  nonMasterEnvironments: nonMaster,
-                  warnings: nonMaster.length > 0 
-                    ? `${nonMaster.length} non-master branches are deployed`
-                    : 'All environments are on master/main',
-                }, null, 2),
+                text: JSON.stringify(
+                  {
+                    allEnvironments: environments,
+                    nonMasterEnvironments: nonMaster,
+                    warnings:
+                      nonMaster.length > 0
+                        ? `${nonMaster.length} non-master branches are deployed`
+                        : 'All environments are on master/main',
+                  },
+                  null,
+                  2,
+                ),
               },
             ],
           };
@@ -453,7 +511,7 @@ class TestRunningAgentMCPServer {
 
         case 'generate_commit_message': {
           const message = await agent.generateCommitMessage();
-          
+
           return {
             content: [
               {
@@ -473,14 +531,117 @@ class TestRunningAgentMCPServer {
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({
-                  upToDate: status.isUpToDate,
-                  message: status.message,
-                  needsPull: mergeStatus.needsPull,
-                  needsMerge: mergeStatus.needsMerge,
-                  hasConflicts: mergeStatus.conflicts,
-                  details: mergeStatus.messages,
-                }, null, 2),
+                text: JSON.stringify(
+                  {
+                    upToDate: status.isUpToDate,
+                    message: status.message,
+                    needsPull: mergeStatus.needsPull,
+                    needsMerge: mergeStatus.needsMerge,
+                    hasConflicts: mergeStatus.conflicts,
+                    details: mergeStatus.messages,
+                  },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
+        }
+
+        case 'check_github_pr': {
+          const { branch } = request.params.arguments as any;
+          const gitHubIntegration = agent['gitHubIntegration'];
+          
+          if (!gitHubIntegration) {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: 'GitHub integration is not enabled. Add github config to test-agent.config.json',
+                },
+              ],
+            };
+          }
+
+          const analysis = await gitHubIntegration.analyzePullRequest(branch);
+          const resolutionAnalysis = await gitHubIntegration.analyzeCommentResolution();
+          
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    pullRequest: analysis.pullRequest ? {
+                      number: analysis.pullRequest.number,
+                      title: analysis.pullRequest.title,
+                      url: analysis.pullRequest.html_url,
+                    } : null,
+                    summary: {
+                      actionItems: analysis.actionItems.length,
+                      requestedChanges: analysis.requestedChanges.length,
+                      concerns: analysis.concerns.length,
+                      suggestions: analysis.suggestions.length,
+                      resolutionConfidence: `${Math.round(resolutionAnalysis.overallConfidence * 100)}%`,
+                      resolved: resolutionAnalysis.resolvedCount,
+                      partiallyResolved: resolutionAnalysis.partiallyResolvedCount,
+                      unresolved: resolutionAnalysis.unresolvedCount,
+                    },
+                    details: {
+                      actionItems: analysis.actionItems.slice(0, 3),
+                      requestedChanges: analysis.requestedChanges.slice(0, 3),
+                      concerns: analysis.concerns.slice(0, 3),
+                    },
+                  },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
+        }
+
+        case 'analyze_pr_resolutions': {
+          const { changedFiles } = request.params.arguments as any;
+          const gitHubIntegration = agent['gitHubIntegration'];
+          
+          if (!gitHubIntegration) {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: 'GitHub integration is not enabled. Add github config to test-agent.config.json',
+                },
+              ],
+            };
+          }
+
+          const resolutionAnalysis = await gitHubIntegration.analyzeCommentResolution(changedFiles);
+          
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    overallConfidence: `${Math.round(resolutionAnalysis.overallConfidence * 100)}%`,
+                    summary: {
+                      resolved: resolutionAnalysis.resolvedCount,
+                      partiallyResolved: resolutionAnalysis.partiallyResolvedCount,
+                      unresolved: resolutionAnalysis.unresolvedCount,
+                      total: resolutionAnalysis.resolutions.length,
+                    },
+                    resolutions: resolutionAnalysis.resolutions.map(r => ({
+                      comment: r.comment.substring(0, 100) + (r.comment.length > 100 ? '...' : ''),
+                      type: r.type,
+                      confidence: `${Math.round(r.confidence * 100)}%`,
+                      reasoning: r.reasoning,
+                      relatedFiles: r.relatedFiles,
+                    })),
+                  },
+                  null,
+                  2,
+                ),
               },
             ],
           };
@@ -488,7 +649,7 @@ class TestRunningAgentMCPServer {
 
         case 'start_watching': {
           const { projectPath } = request.params.arguments as any;
-          
+
           // Update project path if provided
           if (projectPath) {
             agent['config'].projectRoot = projectPath;
@@ -519,11 +680,12 @@ class TestRunningAgentMCPServer {
             content: [
               {
                 type: 'text',
-                text: `🚀 Started Test Running Agent\n\n` +
-                      `📁 Watching: ${agent['config'].projectRoot}\n` +
-                      `✅ Enabled features: ${enabledFeatures.join(', ') || 'Basic testing'}\n\n` +
-                      `File changes will automatically trigger appropriate tests.\n` +
-                      `Use @test-running-agent stop_watching to stop.`,
+                text:
+                  `🚀 Started Test Running Agent\n\n` +
+                  `📁 Watching: ${agent['config'].projectRoot}\n` +
+                  `✅ Enabled features: ${enabledFeatures.join(', ') || 'Basic testing'}\n\n` +
+                  `File changes will automatically trigger appropriate tests.\n` +
+                  `Use @test-running-agent stop_watching to stop.`,
               },
             ],
           };
@@ -558,7 +720,7 @@ class TestRunningAgentMCPServer {
           const status = agent.getStatus();
           const gitIntegration = agent['gitIntegration'];
           const currentBranch = await gitIntegration.getCurrentBranch();
-          
+
           // Get enabled features
           const enabledFeatures = [];
           if (agent['config'].postman?.enabled) enabledFeatures.push('Postman');
@@ -572,16 +734,20 @@ class TestRunningAgentMCPServer {
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({
-                  running: status.running,
-                  cursorConnected: status.cursorConnected,
-                  projectRoot: agent['config'].projectRoot,
-                  currentBranch,
-                  enabledFeatures,
-                  testSuites: agent['config'].testSuites
-                    .filter(suite => suite.enabled !== false)
-                    .map(suite => suite.type),
-                }, null, 2),
+                text: JSON.stringify(
+                  {
+                    running: status.running,
+                    cursorConnected: status.cursorConnected,
+                    projectRoot: agent['config'].projectRoot,
+                    currentBranch,
+                    enabledFeatures,
+                    testSuites: agent['config'].testSuites
+                      .filter((suite) => suite.enabled !== false)
+                      .map((suite) => suite.type),
+                  },
+                  null,
+                  2,
+                ),
               },
             ],
           };
@@ -590,7 +756,7 @@ class TestRunningAgentMCPServer {
         case 'analyze_complexity': {
           const { files } = request.params.arguments as any;
           const report = await agent.getComplexityReport(files);
-          
+
           return {
             content: [
               {
@@ -604,7 +770,7 @@ class TestRunningAgentMCPServer {
         case 'compare_complexity': {
           const { file } = request.params.arguments as any;
           const complexityAnalyzer = agent['complexityAnalyzer'];
-          
+
           if (!complexityAnalyzer.shouldAnalyzeFile(file)) {
             return {
               content: [
@@ -617,7 +783,7 @@ class TestRunningAgentMCPServer {
           }
 
           const comparison = await complexityAnalyzer.compareComplexity(file);
-          
+
           if (!comparison) {
             return {
               content: [
@@ -630,16 +796,22 @@ class TestRunningAgentMCPServer {
           }
 
           const icon = comparison.increased ? '📈' : '📉';
-          const changeStr = comparison.increased ? `+${comparison.change}` : comparison.change.toString();
-          
+          const changeStr = comparison.increased
+            ? `+${comparison.change}`
+            : comparison.change.toString();
+
           return {
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({
-                  ...comparison,
-                  summary: `${icon} Complexity: ${comparison.previous} → ${comparison.current} (${changeStr}, ${comparison.percentageChange.toFixed(1)}%)`,
-                }, null, 2),
+                text: JSON.stringify(
+                  {
+                    ...comparison,
+                    summary: `${icon} Complexity: ${comparison.previous} → ${comparison.current} (${changeStr}, ${comparison.percentageChange.toFixed(1)}%)`,
+                  },
+                  null,
+                  2,
+                ),
               },
             ],
           };
@@ -648,7 +820,7 @@ class TestRunningAgentMCPServer {
         // Optimized Workflow Tools
         case 'workflow_dev_setup': {
           const { projectPath } = request.params.arguments as any;
-          
+
           if (!this.orchestrator) {
             return {
               content: [
@@ -661,10 +833,10 @@ class TestRunningAgentMCPServer {
           }
 
           const result = await this.orchestrator.executeDevSetup(projectPath);
-          
+
           let response = `${result.summary}\n\n`;
           response += `⏱️ Duration: ${result.duration}ms\n\n`;
-          
+
           if (result.success) {
             response += `✅ **Results:**\n`;
             if (result.results.gitStatus) {
@@ -680,7 +852,7 @@ class TestRunningAgentMCPServer {
               response += `• File Watching: Active on ${result.results.finalStatus?.projectRoot || 'project'}\n`;
             }
           }
-          
+
           if (Object.keys(result.errors).length > 0) {
             response += `\n⚠️ **Issues:**\n`;
             Object.entries(result.errors).forEach(([tool, error]) => {
@@ -700,7 +872,7 @@ class TestRunningAgentMCPServer {
 
         case 'workflow_test_suite': {
           const { files = [], includeE2E = false } = request.params.arguments as any;
-          
+
           if (!this.orchestrator) {
             return {
               content: [
@@ -724,10 +896,10 @@ class TestRunningAgentMCPServer {
           }
 
           const result = await this.orchestrator.executeTestSuite(files, includeE2E);
-          
+
           let response = `${result.summary}\n\n`;
           response += `⏱️ Duration: ${result.duration}ms\n\n`;
-          
+
           if (result.success) {
             response += `✅ **Results:**\n`;
             if (result.results.testResults) {
@@ -745,7 +917,7 @@ class TestRunningAgentMCPServer {
               response += `• E2E Tests: Completed\n`;
             }
           }
-          
+
           if (Object.keys(result.errors).length > 0) {
             response += `\n⚠️ **Issues:**\n`;
             Object.entries(result.errors).forEach(([tool, error]) => {
@@ -776,10 +948,10 @@ class TestRunningAgentMCPServer {
           }
 
           const result = await this.orchestrator.executePreCommit();
-          
+
           let response = `${result.summary}\n\n`;
           response += `⏱️ Duration: ${result.duration}ms\n\n`;
-          
+
           if (result.success) {
             response += `✅ **Validation Results:**\n`;
             if (result.results.gitStatus) {
@@ -795,7 +967,7 @@ class TestRunningAgentMCPServer {
               response += `\n📝 **Generated Commit Message:**\n\`\`\`\n${result.results.commitMessage}\n\`\`\`\n`;
             }
           }
-          
+
           if (Object.keys(result.errors).length > 0) {
             response += `\n❌ **Validation Issues:**\n`;
             Object.entries(result.errors).forEach(([tool, error]) => {
@@ -826,36 +998,36 @@ class TestRunningAgentMCPServer {
           }
 
           const result = await this.orchestrator.executeHealthCheck();
-          
+
           let response = `${result.summary}\n\n`;
           response += `⏱️ Duration: ${result.duration}ms\n\n`;
-          
+
           response += `📊 **System Status:**\n`;
           if (result.results.agentStatus) {
             const status = result.results.agentStatus;
             response += `• Agent: ${status.running ? '🟢 Running' : '🔴 Stopped'} on ${status.currentBranch}\n`;
             response += `• Features: ${status.enabledFeatures.join(', ') || 'Basic'}\n`;
           }
-          
+
           if (result.results.gitStatus) {
             response += `• Git: ${result.results.gitStatus.upToDate ? '🟢 Up to date' : '🟡 Needs attention'}\n`;
           }
-          
+
           if (result.results.environments) {
             const envWarnings = result.results.environments.nonMasterEnvironments?.length || 0;
             response += `• Environments: ${envWarnings === 0 ? '🟢 Clean' : `🟡 ${envWarnings} non-master deployments`}\n`;
           }
-          
+
           if (result.results.jiraStatus) {
             response += `• JIRA: 🟢 Connected\n`;
           }
-          
+
           if (result.results.coverage) {
             const coverage = result.results.coverage.coverage.lines;
             const icon = coverage >= 80 ? '🟢' : coverage >= 60 ? '🟡' : '🔴';
             response += `• Coverage: ${icon} ${coverage.toFixed(1)}%\n`;
           }
-          
+
           if (Object.keys(result.errors).length > 0) {
             response += `\n⚠️ **Issues Detected:**\n`;
             Object.entries(result.errors).forEach(([component, error]) => {
@@ -882,7 +1054,7 @@ class TestRunningAgentMCPServer {
   async run() {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    
+
     // Cleanup on exit
     process.on('SIGINT', async () => {
       if (this.agent) {

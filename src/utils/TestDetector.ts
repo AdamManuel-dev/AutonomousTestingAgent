@@ -17,7 +17,7 @@ export class TestDetector {
 
     for (const suite of this.config.testSuites) {
       const patterns = Array.isArray(suite.pattern) ? suite.pattern : [suite.pattern];
-      
+
       for (const changedPath of changedPaths) {
         if (this.matchesPattern(changedPath, patterns)) {
           suitesToRun.add(suite);

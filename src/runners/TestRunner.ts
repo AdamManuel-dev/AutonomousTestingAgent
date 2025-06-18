@@ -33,8 +33,9 @@ export class TestRunner extends EventEmitter {
 
     try {
       // Use coverage command if available and coverage is enabled
-      const command = collectCoverage && suite.coverageCommand ? suite.coverageCommand : suite.command;
-      
+      const command =
+        collectCoverage && suite.coverageCommand ? suite.coverageCommand : suite.command;
+
       const { stdout, stderr } = await execa(command, {
         cwd: projectRoot,
         shell: true,
@@ -48,9 +49,17 @@ export class TestRunner extends EventEmitter {
       // Parse coverage data if available
       let coverage: CoverageData | undefined;
       if (collectCoverage && ['jest', 'cypress', 'storybook'].includes(suite.type)) {
-        coverage = this.coverageAnalyzer.parseCoverageOutput(output, suite.type as 'jest' | 'cypress' | 'storybook') || undefined;
+        coverage =
+          this.coverageAnalyzer.parseCoverageOutput(
+            output,
+            suite.type as 'jest' | 'cypress' | 'storybook',
+          ) || undefined;
         if (coverage) {
-          console.log(chalk.cyan(`📊 Coverage: ${coverage.lines.percentage.toFixed(1)}% lines, ${coverage.branches.percentage.toFixed(1)}% branches`));
+          console.log(
+            chalk.cyan(
+              `📊 Coverage: ${coverage.lines.percentage.toFixed(1)}% lines, ${coverage.branches.percentage.toFixed(1)}% branches`,
+            ),
+          );
         }
       }
 
@@ -96,7 +105,7 @@ export class TestRunner extends EventEmitter {
     collectCoverage: boolean = false,
   ): Promise<TestResult[]> {
     const triggeredFiles = changes.map((change) => change.path);
-    
+
     const promises = suites.map((suite) =>
       this.runTestSuite(suite, triggeredFiles, projectRoot, collectCoverage),
     );

@@ -18,7 +18,10 @@ export class StagehandRunner {
     return this.mcpIntegration.isToolAvailable('mcp__stagehand__stagehand_navigate');
   }
 
-  async runScenario(scenario: StagehandScenario, description?: string): Promise<{
+  async runScenario(
+    scenario: StagehandScenario,
+    description?: string,
+  ): Promise<{
     success: boolean;
     output: string;
     duration: number;
@@ -35,7 +38,8 @@ export class StagehandRunner {
     if (!this.isStagehandAvailable()) {
       return {
         success: false,
-        output: 'Stagehand MCP tool is not available. Please ensure MCP is configured with Stagehand.',
+        output:
+          'Stagehand MCP tool is not available. Please ensure MCP is configured with Stagehand.',
         duration: 0,
       };
     }
@@ -45,16 +49,17 @@ export class StagehandRunner {
 
     try {
       console.log(chalk.blue(`\n🎭 Running Stagehand scenario: ${scenario.name}`));
-      
+
       if (description && this.config.promptForClarification) {
         console.log(chalk.yellow(`📝 Description: ${description}`));
-        
+
         // Analyze description for clarity
         const needsClarification = await this.analyzeDescription(description);
         if (needsClarification) {
           return {
             success: false,
-            output: 'Description needs clarification. Please provide more specific details about the UI workflow.',
+            output:
+              'Description needs clarification. Please provide more specific details about the UI workflow.',
             duration: Date.now() - startTime,
           };
         }
@@ -69,15 +74,15 @@ export class StagehandRunner {
       // Execute each step
       for (const [index, step] of scenario.steps.entries()) {
         console.log(chalk.cyan(`  Step ${index + 1}: ${step}`));
-        
+
         // Take screenshot before action
         const screenshotPath = await this.takeScreenshot(`step-${index + 1}-before`);
         if (screenshotPath) screenshots.push(screenshotPath);
-        
+
         // Execute the step using stagehand
         // This would integrate with the actual stagehand MCP tool
         await this.executeStagehandAction(step);
-        
+
         // Take screenshot after action
         const afterScreenshotPath = await this.takeScreenshot(`step-${index + 1}-after`);
         if (afterScreenshotPath) screenshots.push(afterScreenshotPath);
@@ -95,7 +100,7 @@ export class StagehandRunner {
     } catch (error: any) {
       const duration = Date.now() - startTime;
       console.log(chalk.red(`❌ Stagehand scenario failed`));
-      
+
       return {
         success: false,
         output: error.message || 'Unknown error',
@@ -108,28 +113,26 @@ export class StagehandRunner {
   private async analyzeDescription(description: string): Promise<boolean> {
     // Simple heuristic to check if description needs clarification
     const vagueTerms = ['something', 'stuff', 'things', 'whatever', 'somehow'];
-    const hasVagueTerms = vagueTerms.some(term => 
-      description.toLowerCase().includes(term)
-    );
-    
+    const hasVagueTerms = vagueTerms.some((term) => description.toLowerCase().includes(term));
+
     const tooShort = description.split(' ').length < 5;
-    
+
     return hasVagueTerms || tooShort;
   }
 
   private async executeStagehandAction(action: string): Promise<void> {
     // This would integrate with the actual stagehand MCP tool
     // For now, just simulate the action
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
   private async takeScreenshot(name: string): Promise<string | null> {
     try {
       const screenshotDir = path.join(process.cwd(), 'stagehand-screenshots');
       await fs.mkdir(screenshotDir, { recursive: true });
-      
+
       const screenshotPath = path.join(screenshotDir, `${name}-${Date.now()}.png`);
-      
+
       // This would use stagehand's screenshot capability
       // For now, return a mock path
       return screenshotPath;
@@ -138,13 +141,15 @@ export class StagehandRunner {
     }
   }
 
-  async runAllScenarios(): Promise<Array<{
-    scenario: string;
-    success: boolean;
-    output: string;
-    duration: number;
-    screenshots?: string[];
-  }>> {
+  async runAllScenarios(): Promise<
+    Array<{
+      scenario: string;
+      success: boolean;
+      output: string;
+      duration: number;
+      screenshots?: string[];
+    }>
+  > {
     if (!this.config.enabled) {
       return [];
     }
@@ -155,7 +160,7 @@ export class StagehandRunner {
     }
 
     const results = [];
-    
+
     for (const scenario of scenarios) {
       const result = await this.runScenario(scenario);
       results.push({
@@ -163,7 +168,7 @@ export class StagehandRunner {
         ...result,
       });
     }
-    
+
     return results;
   }
 
@@ -179,14 +184,14 @@ export class StagehandRunner {
     if (this.config.scenariosPath) {
       try {
         const files = await fs.readdir(this.config.scenariosPath);
-        const scenarioFiles = files.filter(f => 
-          f.endsWith('.json') || f.endsWith('.yaml') || f.endsWith('.yml')
+        const scenarioFiles = files.filter(
+          (f) => f.endsWith('.json') || f.endsWith('.yaml') || f.endsWith('.yml'),
         );
 
         for (const file of scenarioFiles) {
           const filePath = path.join(this.config.scenariosPath, file);
           const content = await fs.readFile(filePath, 'utf-8');
-          
+
           if (file.endsWith('.json')) {
             const scenario = JSON.parse(content) as StagehandScenario;
             scenarios.push(scenario);
@@ -196,7 +201,10 @@ export class StagehandRunner {
           }
         }
       } catch (error) {
-        console.error(chalk.red(`Failed to load scenarios from ${this.config.scenariosPath}`), error);
+        console.error(
+          chalk.red(`Failed to load scenarios from ${this.config.scenariosPath}`),
+          error,
+        );
       }
     }
 
@@ -207,7 +215,7 @@ export class StagehandRunner {
     if (!description) return null;
 
     // Parse the description to extract steps
-    const lines = description.split('\n').filter(line => line.trim());
+    const lines = description.split('\n').filter((line) => line.trim());
     const steps: string[] = [];
 
     for (const line of lines) {
@@ -231,10 +239,12 @@ export class StagehandRunner {
       }
     }
 
-    return steps.length > 0 ? {
-      name: 'Generated scenario',
-      description,
-      steps,
-    } : null;
+    return steps.length > 0
+      ? {
+          name: 'Generated scenario',
+          description,
+          steps,
+        }
+      : null;
   }
 }

@@ -21,19 +21,19 @@ export class SmartTestSelector {
   async selectTestSuites(changes: FileChange[]): Promise<TestDecision> {
     // Check if any critical paths are affected
     const criticalPathsAffected = this.checkCriticalPaths(changes);
-    
+
     // For source file changes, we need to check watch patterns, not test patterns
     const matchedSuites = this.detectSuitesForSourceFiles(changes);
-    
+
     if (criticalPathsAffected) {
       // Run all test suites for critical path changes
-      const allSuites = this.config.testSuites.filter(suite => suite.enabled !== false);
+      const allSuites = this.config.testSuites.filter((suite) => suite.enabled !== false);
       return {
         suites: allSuites,
         reason: 'Critical path changes detected - running all test suites',
       };
     }
-    
+
     if (!this.config.coverage?.enabled) {
       // If coverage is disabled, return matched suites
       return {
@@ -44,7 +44,8 @@ export class SmartTestSelector {
 
     // Load latest coverage data
     const coveragePath = this.config.coverage.persistPath || 'coverage';
-    const coverage = await this.coverageAnalyzer.loadCoverageFromFile(coveragePath) || this.lastCoverage;
+    const coverage =
+      (await this.coverageAnalyzer.loadCoverageFromFile(coveragePath)) || this.lastCoverage;
 
     if (!coverage) {
       // No coverage data available, run all matched tests
@@ -100,13 +101,19 @@ export class SmartTestSelector {
     // Always run unit tests if files have low coverage
     if (lowCoverageFiles.length > 0) {
       suitesToRun.push(...unitSuites);
-      reasons.push(`${lowCoverageFiles.length} files have low coverage (<${this.config.coverage?.thresholds.unit || 80}%)`);
+      reasons.push(
+        `${lowCoverageFiles.length} files have low coverage (<${this.config.coverage?.thresholds.unit || 80}%)`,
+      );
     }
 
     // Run E2E tests for critical changes or declining coverage
     if (needsE2E || coverageTrend.trend === 'declining') {
       suitesToRun.push(...e2eSuites);
-      reasons.push(needsE2E ? 'Critical paths affected' : `Coverage declining by ${Math.abs(coverageTrend.delta).toFixed(1)}%`);
+      reasons.push(
+        needsE2E
+          ? 'Critical paths affected'
+          : `Coverage declining by ${Math.abs(coverageTrend.delta).toFixed(1)}%`,
+      );
     }
 
     // Run Storybook tests for UI component changes
@@ -121,7 +128,9 @@ export class SmartTestSelector {
       const allSuites = [...unitSuites, ...e2eSuites, ...storybookSuites];
       const additionalSuites = allSuites.filter((s) => !suitesToRun.includes(s));
       suitesToRun.push(...additionalSuites);
-      reasons.push(`Overall coverage low (${coverage.lines.percentage.toFixed(1)}%) - running comprehensive tests`);
+      reasons.push(
+        `Overall coverage low (${coverage.lines.percentage.toFixed(1)}%) - running comprehensive tests`,
+      );
     }
 
     // If no specific reason to run tests, run unit tests as default
@@ -152,12 +161,12 @@ export class SmartTestSelector {
 
     for (const change of changes) {
       // Check exact paths
-      if (paths.some(path => change.path.includes(path))) {
+      if (paths.some((path) => change.path.includes(path))) {
         return true;
       }
 
       // Check patterns
-      if (patterns.some(pattern => minimatch(change.path, pattern))) {
+      if (patterns.some((pattern) => minimatch(change.path, pattern))) {
         return true;
       }
     }
@@ -173,11 +182,15 @@ export class SmartTestSelector {
     const thresholds = this.config.coverage?.thresholds || { unit: 80, integration: 70, e2e: 60 };
 
     if (coverage.lines.percentage < thresholds.unit) {
-      recommendations.push(`Increase unit test coverage to ${thresholds.unit}% (current: ${coverage.lines.percentage.toFixed(1)}%)`);
+      recommendations.push(
+        `Increase unit test coverage to ${thresholds.unit}% (current: ${coverage.lines.percentage.toFixed(1)}%)`,
+      );
     }
 
     if (coverage.branches.percentage < thresholds.integration) {
-      recommendations.push(`Add integration tests for untested branches (${coverage.branches.percentage.toFixed(1)}% covered)`);
+      recommendations.push(
+        `Add integration tests for untested branches (${coverage.branches.percentage.toFixed(1)}% covered)`,
+      );
     }
 
     // Find files with very low coverage
@@ -186,7 +199,9 @@ export class SmartTestSelector {
       .map(([path]) => path);
 
     if (criticalFiles.length > 0) {
-      recommendations.push(`Critical files need tests: ${criticalFiles.slice(0, 3).join(', ')}${criticalFiles.length > 3 ? ` and ${criticalFiles.length - 3} more` : ''}`);
+      recommendations.push(
+        `Critical files need tests: ${criticalFiles.slice(0, 3).join(', ')}${criticalFiles.length > 3 ? ` and ${criticalFiles.length - 3} more` : ''}`,
+      );
     }
 
     return recommendations;
@@ -200,12 +215,12 @@ export class SmartTestSelector {
     const changedPaths = changes.map((change) => change.path);
 
     for (const suite of this.config.testSuites) {
-      const watchPatterns = Array.isArray(suite.watchPattern) 
-        ? suite.watchPattern 
+      const watchPatterns = Array.isArray(suite.watchPattern)
+        ? suite.watchPattern
         : [suite.watchPattern || '**/*'];
-      
+
       for (const changedPath of changedPaths) {
-        if (watchPatterns.some(pattern => minimatch(changedPath, pattern, { dot: true }))) {
+        if (watchPatterns.some((pattern) => minimatch(changedPath, pattern, { dot: true }))) {
           suitesToRun.add(suite);
           break;
         }

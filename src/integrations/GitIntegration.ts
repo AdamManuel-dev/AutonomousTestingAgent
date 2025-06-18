@@ -51,7 +51,7 @@ export class GitIntegration {
   async getStatus(): Promise<GitStatus> {
     const branch = await this.getCurrentBranch();
     const mainBranch = await this.getMainBranch();
-    
+
     // Fetch latest to ensure we have up-to-date info
     await this.fetchLatest();
 
@@ -60,7 +60,9 @@ export class GitIntegration {
 
     try {
       // Check how many commits ahead/behind we are from origin
-      const { stdout: aheadBehind } = await execAsync(`git rev-list --left-right --count origin/${branch}...HEAD 2>/dev/null || echo "0 0"`);
+      const { stdout: aheadBehind } = await execAsync(
+        `git rev-list --left-right --count origin/${branch}...HEAD 2>/dev/null || echo "0 0"`,
+      );
       const [behindStr, aheadStr] = aheadBehind.trim().split('\t');
       behind = parseInt(behindStr) || 0;
       ahead = parseInt(aheadStr) || 0;
@@ -70,13 +72,20 @@ export class GitIntegration {
 
     // Check for uncommitted changes
     const { stdout: statusOutput } = await execAsync('git status --porcelain');
-    const statusLines = statusOutput.trim().split('\n').filter(line => line);
-    
-    const hasUncommittedChanges = statusLines.some(line => 
-      line.startsWith(' M') || line.startsWith('M ') || line.startsWith('A ') || line.startsWith('D ')
+    const statusLines = statusOutput
+      .trim()
+      .split('\n')
+      .filter((line) => line);
+
+    const hasUncommittedChanges = statusLines.some(
+      (line) =>
+        line.startsWith(' M') ||
+        line.startsWith('M ') ||
+        line.startsWith('A ') ||
+        line.startsWith('D '),
     );
-    
-    const hasUntrackedFiles = statusLines.some(line => line.startsWith('??'));
+
+    const hasUntrackedFiles = statusLines.some((line) => line.startsWith('??'));
 
     return {
       branch,
@@ -100,7 +109,9 @@ export class GitIntegration {
     // Check if we need to pull
     const needsPull = status.behind > 0;
     if (needsPull) {
-      messages.push(`⬇️  Your branch is ${status.behind} commit(s) behind origin/${status.branch}. Run 'git pull' to update.`);
+      messages.push(
+        `⬇️  Your branch is ${status.behind} commit(s) behind origin/${status.branch}. Run 'git pull' to update.`,
+      );
     }
 
     // Check if we need to merge main/master
@@ -110,16 +121,22 @@ export class GitIntegration {
     if (status.branch !== mainBranch) {
       try {
         // Check how many commits main is ahead of our branch
-        const { stdout } = await execAsync(`git rev-list --count ${status.branch}..origin/${mainBranch}`);
+        const { stdout } = await execAsync(
+          `git rev-list --count ${status.branch}..origin/${mainBranch}`,
+        );
         const commitsAhead = parseInt(stdout.trim()) || 0;
-        
+
         if (commitsAhead > 0) {
           needsMerge = true;
-          messages.push(`🔄 The ${mainBranch} branch is ${commitsAhead} commit(s) ahead. Consider merging or rebasing.`);
-          
+          messages.push(
+            `🔄 The ${mainBranch} branch is ${commitsAhead} commit(s) ahead. Consider merging or rebasing.`,
+          );
+
           // Check for potential conflicts
           try {
-            await execAsync(`git merge-tree $(git merge-base HEAD origin/${mainBranch}) HEAD origin/${mainBranch}`);
+            await execAsync(
+              `git merge-tree $(git merge-base HEAD origin/${mainBranch}) HEAD origin/${mainBranch}`,
+            );
           } catch {
             conflicts = true;
             messages.push(`⚠️  Potential merge conflicts detected with ${mainBranch}.`);
@@ -132,7 +149,9 @@ export class GitIntegration {
 
     // Check for uncommitted changes
     if (status.hasUncommittedChanges) {
-      messages.push('📝 You have uncommitted changes. Commit or stash them before pulling/merging.');
+      messages.push(
+        '📝 You have uncommitted changes. Commit or stash them before pulling/merging.',
+      );
     }
 
     return {
@@ -146,7 +165,10 @@ export class GitIntegration {
   async getRecentCommits(limit: number = 5): Promise<string[]> {
     try {
       const { stdout } = await execAsync(`git log --oneline -n ${limit}`);
-      return stdout.trim().split('\n').filter(line => line);
+      return stdout
+        .trim()
+        .split('\n')
+        .filter((line) => line);
     } catch {
       return [];
     }
@@ -157,29 +179,35 @@ export class GitIntegration {
       // Get the root of the git repository
       const { stdout: gitRoot } = await execAsync('git rev-parse --show-toplevel');
       const repoRoot = gitRoot.trim();
-      
+
       // Get current working directory
       const cwd = process.cwd();
-      
+
       // Get unstaged changes
       const { stdout } = await execAsync('git diff --name-only HEAD');
-      const unstaged = stdout.trim().split('\n').filter(line => line);
-      
+      const unstaged = stdout
+        .trim()
+        .split('\n')
+        .filter((line) => line);
+
       // Get staged changes
       const { stdout: staged } = await execAsync('git diff --name-only --cached');
-      const stagedFiles = staged.trim().split('\n').filter(line => line);
-      
+      const stagedFiles = staged
+        .trim()
+        .split('\n')
+        .filter((line) => line);
+
       // Combine and deduplicate
       const allFiles = [...new Set([...unstaged, ...stagedFiles])];
-      
+
       // If we're in a subdirectory of the repo, adjust the paths
       if (cwd !== repoRoot && cwd.startsWith(repoRoot)) {
         const relativePath = cwd.substring(repoRoot.length + 1);
         return allFiles
-          .filter(file => file.startsWith(relativePath + '/'))
-          .map(file => file.substring(relativePath.length + 1));
+          .filter((file) => file.startsWith(relativePath + '/'))
+          .map((file) => file.substring(relativePath.length + 1));
       }
-      
+
       return allFiles;
     } catch {
       return [];
@@ -191,7 +219,7 @@ export class GitIntegration {
     message: string;
   }> {
     const status = await this.checkMergeStatus();
-    
+
     if (status.messages.length === 0) {
       return {
         isUpToDate: true,

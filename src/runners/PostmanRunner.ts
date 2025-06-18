@@ -26,33 +26,33 @@ export class PostmanRunner {
     }
 
     const startTime = Date.now();
-    
+
     try {
       console.log(chalk.blue(`\n📮 Running Postman collection: ${collectionPath}`));
-      
+
       let command = `npx newman run ${collectionPath}`;
-      
+
       if (this.config.environment) {
         command += ` -e ${this.config.environment}`;
       }
-      
+
       if (this.config.globals) {
         command += ` -g ${this.config.globals}`;
       }
-      
+
       if (this.config.iterationCount) {
         command += ` -n ${this.config.iterationCount}`;
       }
-      
+
       command += ' --reporters cli,json --reporter-json-export postman-results.json';
-      
+
       const { stdout, stderr } = await execAsync(command);
-      
+
       const duration = Date.now() - startTime;
       const output = stdout + (stderr ? `\n\nErrors:\n${stderr}` : '');
-      
+
       console.log(chalk.green(`✅ Postman collection completed in ${duration}ms`));
-      
+
       return {
         success: !stderr,
         output,
@@ -61,7 +61,7 @@ export class PostmanRunner {
     } catch (error: any) {
       const duration = Date.now() - startTime;
       console.log(chalk.red(`❌ Postman collection failed`));
-      
+
       return {
         success: false,
         output: error.message || 'Unknown error',
@@ -70,18 +70,20 @@ export class PostmanRunner {
     }
   }
 
-  async runAllCollections(): Promise<Array<{
-    collection: string;
-    success: boolean;
-    output: string;
-    duration: number;
-  }>> {
+  async runAllCollections(): Promise<
+    Array<{
+      collection: string;
+      success: boolean;
+      output: string;
+      duration: number;
+    }>
+  > {
     if (!this.config.enabled || !this.config.collections || this.config.collections.length === 0) {
       return [];
     }
 
     const results = [];
-    
+
     for (const collection of this.config.collections) {
       const result = await this.runCollection(collection);
       results.push({
@@ -89,7 +91,7 @@ export class PostmanRunner {
         ...result,
       });
     }
-    
+
     return results;
   }
 }

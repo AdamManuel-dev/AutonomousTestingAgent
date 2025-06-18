@@ -85,7 +85,7 @@ export class NotificationManager extends EventEmitter {
   private consoleNotify(notification: Notification): void {
     const icon = notification.icon || this.getIcon(notification.type);
     const color = this.getColor(notification.type);
-    
+
     console.log(color(`\n${icon} ${notification.title}`));
     if (notification.message) {
       console.log(chalk.gray(notification.message));
@@ -96,12 +96,14 @@ export class NotificationManager extends EventEmitter {
     try {
       const icon = notification.icon || this.getIcon(notification.type);
       const title = `${icon} ${notification.title}`;
-      
+
       switch (this.platform) {
         case 'darwin': // macOS
-          await execAsync(`osascript -e 'display notification "${notification.message}" with title "${title}"'`);
+          await execAsync(
+            `osascript -e 'display notification "${notification.message}" with title "${title}"'`,
+          );
           break;
-          
+
         case 'linux':
           // Check if notify-send is available
           try {
@@ -112,7 +114,7 @@ export class NotificationManager extends EventEmitter {
             console.log(chalk.yellow('System notifications not available - install libnotify-bin'));
           }
           break;
-          
+
         case 'win32': // Windows
           // Use PowerShell for Windows notifications
           const psCommand = `
@@ -138,7 +140,7 @@ export class NotificationManager extends EventEmitter {
             $toast = New-Object Windows.UI.Notifications.ToastNotification $xml
             [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($APP_ID).Show($toast)
           `;
-          
+
           await execAsync(`powershell -Command "${psCommand.replace(/\n/g, ' ')}"`);
           break;
       }
@@ -153,7 +155,7 @@ export class NotificationManager extends EventEmitter {
 
     try {
       const { default: fetch } = await import('node-fetch');
-      
+
       const color = {
         info: '#36a64f',
         success: '#2eb886',
@@ -163,13 +165,15 @@ export class NotificationManager extends EventEmitter {
 
       const payload = {
         channel: this.config.slack.channel,
-        attachments: [{
-          color,
-          title: notification.title,
-          text: notification.message,
-          footer: 'Test Running Agent',
-          ts: Math.floor(notification.timestamp.getTime() / 1000),
-        }],
+        attachments: [
+          {
+            color,
+            title: notification.title,
+            text: notification.message,
+            footer: 'Test Running Agent',
+            ts: Math.floor(notification.timestamp.getTime() / 1000),
+          },
+        ],
       };
 
       await fetch(this.config.slack.webhookUrl, {
@@ -184,37 +188,71 @@ export class NotificationManager extends EventEmitter {
 
   private getIcon(type: Notification['type']): string {
     switch (type) {
-      case 'success': return '✅';
-      case 'error': return '❌';
-      case 'warning': return '⚠️';
-      case 'info': default: return 'ℹ️';
+      case 'success':
+        return '✅';
+      case 'error':
+        return '❌';
+      case 'warning':
+        return '⚠️';
+      case 'info':
+      default:
+        return 'ℹ️';
     }
   }
 
   private getColor(type: Notification['type']): (text: string) => string {
     switch (type) {
-      case 'success': return chalk.green;
-      case 'error': return chalk.red;
-      case 'warning': return chalk.yellow;
-      case 'info': default: return chalk.blue;
+      case 'success':
+        return chalk.green;
+      case 'error':
+        return chalk.red;
+      case 'warning':
+        return chalk.yellow;
+      case 'info':
+      default:
+        return chalk.blue;
     }
   }
 
   // Convenience methods
   info(title: string, message?: string, data?: any): Promise<void> {
-    return this.notify({ title, message: message || '', type: 'info', timestamp: new Date(), data });
+    return this.notify({
+      title,
+      message: message || '',
+      type: 'info',
+      timestamp: new Date(),
+      data,
+    });
   }
 
   success(title: string, message?: string, data?: any): Promise<void> {
-    return this.notify({ title, message: message || '', type: 'success', timestamp: new Date(), data });
+    return this.notify({
+      title,
+      message: message || '',
+      type: 'success',
+      timestamp: new Date(),
+      data,
+    });
   }
 
   warning(title: string, message?: string, data?: any): Promise<void> {
-    return this.notify({ title, message: message || '', type: 'warning', timestamp: new Date(), data });
+    return this.notify({
+      title,
+      message: message || '',
+      type: 'warning',
+      timestamp: new Date(),
+      data,
+    });
   }
 
   error(title: string, message?: string, data?: any): Promise<void> {
-    return this.notify({ title, message: message || '', type: 'error', timestamp: new Date(), data });
+    return this.notify({
+      title,
+      message: message || '',
+      type: 'error',
+      timestamp: new Date(),
+      data,
+    });
   }
 
   // Test notification

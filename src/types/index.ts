@@ -84,6 +84,33 @@ export interface ComplexityConfig {
   excludePatterns?: string[];
 }
 
+export interface SentryConfig {
+  enabled?: boolean;
+  dsn?: string;
+  environment?: string;
+  release?: string;
+  tracesSampleRate?: number;
+  profilesSampleRate?: number;
+  debug?: boolean;
+}
+
+export interface PostHogConfig {
+  enabled?: boolean;
+  apiKey?: string;
+  host?: string;
+  enableUserTracking?: boolean;
+  enableTestTracking?: boolean;
+  enableErrorTracking?: boolean;
+}
+
+export interface GitHubConfig {
+  enabled?: boolean;
+  token?: string;
+  owner?: string;
+  repo?: string;
+  autoDetect?: boolean;
+}
+
 export interface Config {
   projectRoot: string;
   testSuites: TestSuite[];
@@ -108,6 +135,9 @@ export interface Config {
   mcp?: MCPConfig;
   notifications?: NotificationConfig;
   complexity?: ComplexityConfig;
+  sentry?: SentryConfig;
+  posthog?: PostHogConfig;
+  github?: GitHubConfig;
 }
 
 export interface FileChange {

@@ -25,14 +25,14 @@ export class EnvironmentChecker {
 
     try {
       console.log(chalk.blue('🌍 Checking Jenkins deployment environments...'));
-      
+
       const { default: fetch } = await import('node-fetch');
       const response = await fetch(this.config.checkUrl);
       const html = await response.text();
-      
+
       // Parse Jenkins environment page HTML
       const environments = this.parseJenkinsEnvironments(html);
-      
+
       return environments;
     } catch (error) {
       console.error(chalk.red('Failed to check Jenkins environments'), error);
@@ -42,19 +42,19 @@ export class EnvironmentChecker {
 
   private parseJenkinsEnvironments(html: string): Environment[] {
     const environments: Environment[] = [];
-    
+
     // This is a simplified parser - adjust based on your actual Jenkins page structure
     // Look for environment blocks in the HTML
     const envRegex = /<div class="environment"[^>]*>[\s\S]*?<\/div>/g;
     const matches = html.match(envRegex) || [];
-    
+
     for (const match of matches) {
       const nameMatch = match.match(/data-env-name="([^"]+)"/);
       const branchMatch = match.match(/data-branch="([^"]+)"/);
       const statusMatch = match.match(/data-status="([^"]+)"/);
       const urlMatch = match.match(/href="(https?:\/\/[^"]+)"/);
       const buildMatch = match.match(/Build #(\d+)/);
-      
+
       if (nameMatch && branchMatch) {
         environments.push({
           name: nameMatch[1],
@@ -65,12 +65,12 @@ export class EnvironmentChecker {
         });
       }
     }
-    
+
     // Alternative: Look for table rows if Jenkins uses a table format
     if (environments.length === 0) {
       const rowRegex = /<tr[^>]*>[\s\S]*?<\/tr>/g;
       const rows = html.match(rowRegex) || [];
-      
+
       for (const row of rows) {
         if (row.includes('environment') || row.includes('deployment')) {
           const cells = row.match(/<td[^>]*>([\s\S]*?)<\/td>/g) || [];
@@ -78,20 +78,23 @@ export class EnvironmentChecker {
             const name = cells[0] ? this.extractText(cells[0]) : '';
             const branch = cells[1] ? this.extractText(cells[1]) : '';
             const status = cells[2] ? this.extractText(cells[2]) : 'unknown';
-            
+
             if (name && branch) {
               environments.push({
                 name,
                 branch,
-                status: status.toLowerCase().includes('running') ? 'up' : 
-                        status.toLowerCase().includes('stopped') ? 'down' : 'unknown',
+                status: status.toLowerCase().includes('running')
+                  ? 'up'
+                  : status.toLowerCase().includes('stopped')
+                    ? 'down'
+                    : 'unknown',
               });
             }
           }
         }
       }
     }
-    
+
     return environments;
   }
 
@@ -102,10 +105,8 @@ export class EnvironmentChecker {
 
   async getnonMasterEnvironments(): Promise<Environment[]> {
     const environments = await this.checkEnvironments();
-    return environments.filter(env => 
-      env.branch !== 'master' && 
-      env.branch !== 'main' &&
-      env.status === 'up'
+    return environments.filter(
+      (env) => env.branch !== 'master' && env.branch !== 'main' && env.status === 'up',
     );
   }
 
@@ -119,18 +120,26 @@ export class EnvironmentChecker {
 
     if (nonMasterEnvs.length > 0) {
       messages.push(chalk.yellow('\n⚠️  Non-master environments detected:'));
-      
+
       for (const env of nonMasterEnvs) {
-        messages.push(chalk.yellow(`  • ${env.name}: ${env.branch} ${env.url ? `(${env.url})` : ''}`));
+        messages.push(
+          chalk.yellow(`  • ${env.name}: ${env.branch} ${env.url ? `(${env.url})` : ''}`),
+        );
       }
-      
-      messages.push(chalk.gray('\nConsider coordinating with team members before pushing to avoid conflicts.'));
+
+      messages.push(
+        chalk.gray('\nConsider coordinating with team members before pushing to avoid conflicts.'),
+      );
     }
 
     // Check if current branch is deployed somewhere
-    const currentBranchEnv = nonMasterEnvs.find(env => env.branch === currentBranch);
+    const currentBranchEnv = nonMasterEnvs.find((env) => env.branch === currentBranch);
     if (currentBranchEnv) {
-      messages.push(chalk.cyan(`\n📍 Your branch "${currentBranch}" is currently deployed to: ${currentBranchEnv.name}`));
+      messages.push(
+        chalk.cyan(
+          `\n📍 Your branch "${currentBranch}" is currently deployed to: ${currentBranchEnv.name}`,
+        ),
+      );
     }
 
     return messages;
@@ -148,21 +157,21 @@ export class EnvironmentChecker {
     }
 
     const nonMasterEnvs = await this.getnonMasterEnvironments();
-    
+
     // Check if multiple non-master environments exist
     if (nonMasterEnvs.length > 2) {
       warnings.push('⚠️  Multiple feature branches are deployed. Coordinate with your team.');
     }
 
     // Check if a different branch is deployed to production-like environments
-    const criticalEnvs = nonMasterEnvs.filter(env => 
-      env.name.toLowerCase().includes('staging') || 
-      env.name.toLowerCase().includes('pre-prod')
+    const criticalEnvs = nonMasterEnvs.filter(
+      (env) =>
+        env.name.toLowerCase().includes('staging') || env.name.toLowerCase().includes('pre-prod'),
     );
 
-    if (criticalEnvs.length > 0 && !criticalEnvs.some(env => env.branch === currentBranch)) {
+    if (criticalEnvs.length > 0 && !criticalEnvs.some((env) => env.branch === currentBranch)) {
       warnings.push('🚨 Critical environments are using different branches:');
-      criticalEnvs.forEach(env => {
+      criticalEnvs.forEach((env) => {
         warnings.push(`   • ${env.name}: ${env.branch}`);
       });
     }
@@ -176,10 +185,12 @@ export class EnvironmentChecker {
     }
 
     const lines: string[] = ['📊 Environment Status:'];
-    
-    environments.forEach(env => {
+
+    environments.forEach((env) => {
       const statusIcon = env.status === 'up' ? '🟢' : env.status === 'down' ? '🔴' : '🟡';
-      lines.push(`${statusIcon} ${env.name}: ${env.branch} ${env.lastDeployment ? `(deployed ${env.lastDeployment})` : ''}`);
+      lines.push(
+        `${statusIcon} ${env.name}: ${env.branch} ${env.lastDeployment ? `(deployed ${env.lastDeployment})` : ''}`,
+      );
     });
 
     return lines.join('\n');

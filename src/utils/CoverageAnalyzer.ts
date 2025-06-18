@@ -31,18 +31,22 @@ export class CoverageAnalyzer {
    */
   private parseJestCoverage(output: string): CoverageData | null {
     // Look for coverage summary in Jest output
-    const coverageMatch = output.match(/Coverage summary[\s\S]*?Statements\s*:\s*([\d.]+)%.*?Branches\s*:\s*([\d.]+)%.*?Functions\s*:\s*([\d.]+)%.*?Lines\s*:\s*([\d.]+)%/);
-    
+    const coverageMatch = output.match(
+      /Coverage summary[\s\S]*?Statements\s*:\s*([\d.]+)%.*?Branches\s*:\s*([\d.]+)%.*?Functions\s*:\s*([\d.]+)%.*?Lines\s*:\s*([\d.]+)%/,
+    );
+
     if (!coverageMatch) {
       return null;
     }
 
     const [, statements, branches, functions, lines] = coverageMatch;
-    
+
     // Parse file-level coverage if available
     const files: Record<string, FileCoverage> = {};
-    const fileMatches = output.matchAll(/^\s*(.+?\.[jt]sx?)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/gm);
-    
+    const fileMatches = output.matchAll(
+      /^\s*(.+?\.[jt]sx?)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/gm,
+    );
+
     for (const match of fileMatches) {
       const [, filePath, stmtCov, branchCov, funcCov, lineCov] = match;
       files[filePath] = {
@@ -85,12 +89,12 @@ export class CoverageAnalyzer {
     try {
       const coverageJson = await readFile(join(coveragePath, 'coverage-summary.json'), 'utf-8');
       const summary = JSON.parse(coverageJson);
-      
+
       const files: Record<string, FileCoverage> = {};
-      
+
       for (const [filePath, fileData] of Object.entries(summary)) {
         if (filePath === 'total') continue;
-        
+
         const data = fileData as any;
         files[filePath] = {
           path: filePath,
@@ -163,9 +167,7 @@ export class CoverageAnalyzer {
     ];
 
     const criticalChanges = changes.some((change) =>
-      criticalPatterns.some((pattern) => 
-        change.path.includes(pattern.replace(/\*/g, '')),
-      ),
+      criticalPatterns.some((pattern) => change.path.includes(pattern.replace(/\*/g, ''))),
     );
 
     // Need E2E if critical files changed or overall coverage is low
@@ -183,13 +185,13 @@ export class CoverageAnalyzer {
     delta: number;
   }> {
     const previousCoverage = await this.loadPreviousCoverage();
-    
+
     if (!previousCoverage) {
       return { trend: 'stable', delta: 0 };
     }
 
     const delta = currentCoverage.lines.percentage - previousCoverage.lines.percentage;
-    
+
     if (delta > 1) return { trend: 'improving', delta };
     if (delta < -1) return { trend: 'declining', delta };
     return { trend: 'stable', delta };
@@ -202,10 +204,10 @@ export class CoverageAnalyzer {
     if (!this.config.coverage?.persistPath) return;
 
     const coveragePath = join(this.config.coverage.persistPath, 'coverage-history.json');
-    
+
     try {
       await mkdir(dirname(coveragePath), { recursive: true });
-      
+
       const history = await this.loadCoverageHistory();
       history.push({
         timestamp: new Date().toISOString(),
@@ -234,11 +236,13 @@ export class CoverageAnalyzer {
   /**
    * Load coverage history
    */
-  private async loadCoverageHistory(): Promise<Array<{ timestamp: string; coverage: CoverageData }>> {
+  private async loadCoverageHistory(): Promise<
+    Array<{ timestamp: string; coverage: CoverageData }>
+  > {
     if (!this.config.coverage?.persistPath) return [];
 
     const coveragePath = join(this.config.coverage.persistPath, 'coverage-history.json');
-    
+
     try {
       const data = await readFile(coveragePath, 'utf-8');
       return JSON.parse(data);

@@ -101,13 +101,13 @@ export class ConfigLoader {
     try {
       const configContent = await readFile(resolvedConfigPath, 'utf-8');
       const userConfig = JSON.parse(configContent);
-      
+
       // Determine the base directory for resolving relative paths
       const configDir = dirname(resolvedConfigPath);
-      
+
       // Merge configs
       const mergedConfig = this.mergeConfigs(DEFAULT_CONFIG, userConfig);
-      
+
       // Normalize paths relative to config file location
       return this.normalizeConfig(mergedConfig, configDir);
     } catch (error: any) {
@@ -115,7 +115,7 @@ export class ConfigLoader {
         console.log('Config file not found, using defaults');
         return this.normalizeConfig(DEFAULT_CONFIG, process.cwd());
       }
-      
+
       throw new Error(`Failed to load config: ${error.message}`);
     }
   }
@@ -148,17 +148,17 @@ export class ConfigLoader {
     if (config.postman?.collections) {
       normalizedConfig.postman = {
         ...config.postman,
-        collections: config.postman.collections.map(collection =>
-          isAbsolute(collection) ? collection : resolve(projectRoot, collection)
+        collections: config.postman.collections.map((collection) =>
+          isAbsolute(collection) ? collection : resolve(projectRoot, collection),
         ),
       };
-      
+
       if (config.postman.environment) {
         normalizedConfig.postman.environment = isAbsolute(config.postman.environment)
           ? config.postman.environment
           : resolve(projectRoot, config.postman.environment);
       }
-      
+
       if (config.postman.globals) {
         normalizedConfig.postman.globals = isAbsolute(config.postman.globals)
           ? config.postman.globals

@@ -38,18 +38,20 @@ export class WorkflowOrchestrator {
       const statusChecks = await Promise.allSettled([
         this.checkGitStatus(),
         this.checkEnvironments(),
-        this.checkJira()
+        this.checkJira(),
+        this.checkGitHubPR(),
       ]);
 
       // Process status check results
       results.gitStatus = statusChecks[0].status === 'fulfilled' ? statusChecks[0].value : null;
       results.environments = statusChecks[1].status === 'fulfilled' ? statusChecks[1].value : null;
       results.jiraStatus = statusChecks[2].status === 'fulfilled' ? statusChecks[2].value : null;
+      results.githubPR = statusChecks[3].status === 'fulfilled' ? statusChecks[3].value : null;
 
       // Record any errors from status checks
       statusChecks.forEach((result, index) => {
         if (result.status === 'rejected') {
-          const tools = ['gitStatus', 'environments', 'jiraStatus'];
+          const tools = ['gitStatus', 'environments', 'jiraStatus', 'githubPR'];
           errors[tools[index]] = result.reason.message;
         }
       });
@@ -76,16 +78,15 @@ export class WorkflowOrchestrator {
         results,
         errors,
         duration,
-        summary: this.formatDevSetupSummary(results, errors, success)
+        summary: this.formatDevSetupSummary(results, errors, success),
       };
-
     } catch (error) {
       return {
         success: false,
         results,
         errors: { general: error instanceof Error ? error.message : 'Unknown error' },
         duration: Date.now() - startTime,
-        summary: '❌ Development setup failed'
+        summary: '❌ Development setup failed',
       };
     }
   }
@@ -108,28 +109,31 @@ export class WorkflowOrchestrator {
 
       // Phase 2: Parallel analysis (independent of each other, but may depend on test results)
       const analysisPromises = [];
-      
+
       // Coverage analysis (if tests ran successfully)
       if (results.testResults && !errors.testResults) {
         analysisPromises.push(
-          this.analyzeCoverage().catch(error => ({ error: error.message, type: 'coverage' }))
+          this.analyzeCoverage().catch((error) => ({ error: error.message, type: 'coverage' })),
         );
       }
 
       // Complexity analysis (independent of test results)
       analysisPromises.push(
-        this.analyzeComplexity(files).catch(error => ({ error: error.message, type: 'complexity' }))
+        this.analyzeComplexity(files).catch((error) => ({
+          error: error.message,
+          type: 'complexity',
+        })),
       );
 
       // E2E tests (if requested and independent)
       if (includeE2E) {
         analysisPromises.push(
-          this.runE2E().catch(error => ({ error: error.message, type: 'e2e' }))
+          this.runE2E().catch((error) => ({ error: error.message, type: 'e2e' })),
         );
       }
 
       const analysisResults = await Promise.allSettled(analysisPromises);
-      
+
       // Process analysis results
       analysisResults.forEach((result, index) => {
         if (result.status === 'fulfilled') {
@@ -138,7 +142,8 @@ export class WorkflowOrchestrator {
             errors[data.type] = data.error;
           } else {
             if (index === 0 && results.testResults) results.coverage = data;
-            else if ((index === 1 && !includeE2E) || (index === 1 && !results.testResults)) results.complexity = data;
+            else if ((index === 1 && !includeE2E) || (index === 1 && !results.testResults))
+              results.complexity = data;
             else if (index === 1 && includeE2E) results.complexity = data;
             else if (index === 2) results.e2e = data;
           }
@@ -153,16 +158,15 @@ export class WorkflowOrchestrator {
         results,
         errors,
         duration,
-        summary: this.formatTestSuiteSummary(results, errors, success, includeE2E)
+        summary: this.formatTestSuiteSummary(results, errors, success, includeE2E),
       };
-
     } catch (error) {
       return {
         success: false,
         results,
         errors: { general: error instanceof Error ? error.message : 'Unknown error' },
         duration: Date.now() - startTime,
-        summary: '❌ Test suite execution failed'
+        summary: '❌ Test suite execution failed',
       };
     }
   }
@@ -188,17 +192,23 @@ export class WorkflowOrchestrator {
       const validationChecks = await Promise.allSettled([
         this.checkGitStatus(),
         this.checkJira(),
-        this.checkEnvironments()
+        this.checkEnvironments(),
+        this.checkGitHubPR(),
       ]);
 
       // Process validation results
-      results.gitStatus = validationChecks[0].status === 'fulfilled' ? validationChecks[0].value : null;
-      results.jiraStatus = validationChecks[1].status === 'fulfilled' ? validationChecks[1].value : null;
-      results.environments = validationChecks[2].status === 'fulfilled' ? validationChecks[2].value : null;
+      results.gitStatus =
+        validationChecks[0].status === 'fulfilled' ? validationChecks[0].value : null;
+      results.jiraStatus =
+        validationChecks[1].status === 'fulfilled' ? validationChecks[1].value : null;
+      results.environments =
+        validationChecks[2].status === 'fulfilled' ? validationChecks[2].value : null;
+      results.githubPR =
+        validationChecks[3].status === 'fulfilled' ? validationChecks[3].value : null;
 
       validationChecks.forEach((result, index) => {
         if (result.status === 'rejected') {
-          const tools = ['gitStatus', 'jiraStatus', 'environments'];
+          const tools = ['gitStatus', 'jiraStatus', 'environments', 'githubPR'];
           errors[tools[index]] = result.reason.message;
         }
       });
@@ -208,7 +218,8 @@ export class WorkflowOrchestrator {
         try {
           results.commitMessage = await this.generateCommitMessage();
         } catch (error) {
-          errors.commitMessage = error instanceof Error ? error.message : 'Failed to generate commit message';
+          errors.commitMessage =
+            error instanceof Error ? error.message : 'Failed to generate commit message';
         }
       }
 
@@ -220,16 +231,15 @@ export class WorkflowOrchestrator {
         results,
         errors,
         duration,
-        summary: this.formatPreCommitSummary(results, errors, success)
+        summary: this.formatPreCommitSummary(results, errors, success),
       };
-
     } catch (error) {
       return {
         success: false,
         results,
         errors: { general: error instanceof Error ? error.message : 'Unknown error' },
         duration: Date.now() - startTime,
-        summary: '❌ Pre-commit validation failed'
+        summary: '❌ Pre-commit validation failed',
       };
     }
   }
@@ -249,11 +259,12 @@ export class WorkflowOrchestrator {
         this.checkGitStatus(),
         this.checkEnvironments(),
         this.checkJira(),
-        this.analyzeCoverage()
+        this.checkGitHubPR(),
+        this.analyzeCoverage(),
       ]);
 
-      const healthKeys = ['agentStatus', 'gitStatus', 'environments', 'jiraStatus', 'coverage'];
-      
+      const healthKeys = ['agentStatus', 'gitStatus', 'environments', 'jiraStatus', 'githubPR', 'coverage'];
+
       healthChecks.forEach((result, index) => {
         const key = healthKeys[index];
         if (result.status === 'fulfilled') {
@@ -271,24 +282,27 @@ export class WorkflowOrchestrator {
         results,
         errors,
         duration,
-        summary: this.formatHealthCheckSummary(results, errors, success)
+        summary: this.formatHealthCheckSummary(results, errors, success),
       };
-
     } catch (error) {
       return {
         success: false,
         results,
         errors: { general: error instanceof Error ? error.message : 'Unknown error' },
         duration: Date.now() - startTime,
-        summary: '❌ Health check failed'
+        summary: '❌ Health check failed',
       };
     }
   }
 
   // Caching wrapper for expensive operations
-  private async getCached<T>(key: string, fetcher: () => Promise<T>, ttlMs: number = 30000): Promise<T> {
+  private async getCached<T>(
+    key: string,
+    fetcher: () => Promise<T>,
+    ttlMs: number = 30000,
+  ): Promise<T> {
     const cached = this.cache.get(key);
-    if (cached && (Date.now() - cached.timestamp) < cached.ttl) {
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
       return cached.data;
     }
 
@@ -299,47 +313,90 @@ export class WorkflowOrchestrator {
 
   // Individual tool methods with caching
   private async checkGitStatus() {
-    return this.getCached('gitStatus', async () => {
-      const gitIntegration = this.agent['gitIntegration'];
-      const status = await gitIntegration.checkBranchUpToDate();
-      const mergeStatus = await gitIntegration.checkMergeStatus();
-      return {
-        upToDate: status.isUpToDate,
-        message: status.message,
-        needsPull: mergeStatus.needsPull,
-        needsMerge: mergeStatus.needsMerge,
-        hasConflicts: mergeStatus.conflicts,
-        details: mergeStatus.messages,
-      };
-    }, 30000);
+    return this.getCached(
+      'gitStatus',
+      async () => {
+        const gitIntegration = this.agent['gitIntegration'];
+        const status = await gitIntegration.checkBranchUpToDate();
+        const mergeStatus = await gitIntegration.checkMergeStatus();
+        return {
+          upToDate: status.isUpToDate,
+          message: status.message,
+          needsPull: mergeStatus.needsPull,
+          needsMerge: mergeStatus.needsMerge,
+          hasConflicts: mergeStatus.conflicts,
+          details: mergeStatus.messages,
+        };
+      },
+      30000,
+    );
   }
 
   private async checkEnvironments() {
-    return this.getCached('environments', async () => {
-      const envChecker = this.agent['environmentChecker'];
-      if (!envChecker) {
-        throw new Error('Environment checking not enabled');
-      }
-      const environments = await envChecker.checkEnvironments();
-      const nonMaster = await envChecker.getnonMasterEnvironments();
-      return {
-        allEnvironments: environments,
-        nonMasterEnvironments: nonMaster,
-        warnings: nonMaster.length > 0 
-          ? `${nonMaster.length} non-master branches are deployed`
-          : 'All environments are on master/main',
-      };
-    }, 300000); // Cache for 5 minutes
+    return this.getCached(
+      'environments',
+      async () => {
+        const envChecker = this.agent['environmentChecker'];
+        if (!envChecker) {
+          throw new Error('Environment checking not enabled');
+        }
+        const environments = await envChecker.checkEnvironments();
+        const nonMaster = await envChecker.getnonMasterEnvironments();
+        return {
+          allEnvironments: environments,
+          nonMasterEnvironments: nonMaster,
+          warnings:
+            nonMaster.length > 0
+              ? `${nonMaster.length} non-master branches are deployed`
+              : 'All environments are on master/main',
+        };
+      },
+      300000,
+    ); // Cache for 5 minutes
   }
 
   private async checkJira() {
-    return this.getCached('jira', async () => {
-      const jiraIntegration = this.agent['jiraIntegration'];
-      if (!jiraIntegration) {
-        throw new Error('JIRA integration not enabled');
-      }
-      return await jiraIntegration.analyzeTicketCompleteness();
-    }, 60000); // Cache for 1 minute
+    return this.getCached(
+      'jira',
+      async () => {
+        const jiraIntegration = this.agent['jiraIntegration'];
+        if (!jiraIntegration) {
+          throw new Error('JIRA integration not enabled');
+        }
+        return await jiraIntegration.analyzeTicketCompleteness();
+      },
+      60000,
+    ); // Cache for 1 minute
+  }
+
+  private async checkGitHubPR() {
+    return this.getCached(
+      'githubPR',
+      async () => {
+        const gitHubIntegration = this.agent['gitHubIntegration'];
+        if (!gitHubIntegration) {
+          throw new Error('GitHub integration not enabled');
+        }
+        
+        const analysis = await gitHubIntegration.analyzePullRequest();
+        const resolutionAnalysis = await gitHubIntegration.analyzeCommentResolution();
+        
+        return {
+          pullRequest: analysis.pullRequest,
+          actionItems: analysis.actionItems.length,
+          requestedChanges: analysis.requestedChanges.length,
+          concerns: analysis.concerns.length,
+          suggestions: analysis.suggestions.length,
+          hasUnresolvedItems: resolutionAnalysis.unresolvedCount > 0,
+          resolutionConfidence: resolutionAnalysis.overallConfidence,
+          resolvedCount: resolutionAnalysis.resolvedCount,
+          partiallyResolvedCount: resolutionAnalysis.partiallyResolvedCount,
+          unresolvedCount: resolutionAnalysis.unresolvedCount,
+          resolutions: resolutionAnalysis.resolutions,
+        };
+      },
+      60000,
+    ); // Cache for 1 minute
   }
 
   private async runTests(files: string[]) {
@@ -354,19 +411,19 @@ export class WorkflowOrchestrator {
       testDecision.suites,
       changes,
       this.agent['config'].projectRoot,
-      true
+      true,
     );
 
     return {
       decision: testDecision,
-      results: results
+      results: results,
     };
   }
 
   private async analyzeCoverage() {
     const coverageAnalyzer = this.agent['coverageAnalyzer'];
     const coverage = await coverageAnalyzer.loadCoverageFromFile(
-      this.agent['config'].coverage?.persistPath || 'coverage'
+      this.agent['config'].coverage?.persistPath || 'coverage',
     );
 
     if (!coverage) {
@@ -436,7 +493,7 @@ export class WorkflowOrchestrator {
     const status = this.agent.getStatus();
     const gitIntegration = this.agent['gitIntegration'];
     const currentBranch = await gitIntegration.getCurrentBranch();
-    
+
     const enabledFeatures = [];
     if (this.agent['config'].postman?.enabled) enabledFeatures.push('Postman');
     if (this.agent['config'].stagehand?.enabled) enabledFeatures.push('Stagehand');
@@ -452,8 +509,8 @@ export class WorkflowOrchestrator {
       currentBranch,
       enabledFeatures,
       testSuites: this.agent['config'].testSuites
-        .filter(suite => suite.enabled !== false)
-        .map(suite => suite.type),
+        .filter((suite) => suite.enabled !== false)
+        .map((suite) => suite.type),
     };
   }
 
@@ -469,40 +526,55 @@ export class WorkflowOrchestrator {
     }
 
     const parts = ['🚀 Development setup complete'];
-    
+
     if (results.gitStatus?.upToDate) parts.push('✅ Git up to date');
     else if (results.gitStatus) parts.push('⚠️ Git needs attention');
-    
+
     if (results.environments && !results.environments.nonMasterEnvironments?.length) {
       parts.push('✅ Environments clean');
     } else if (results.environments) {
       parts.push('⚠️ Environment issues detected');
     }
-    
+
     if (results.jiraStatus) parts.push('✅ JIRA checked');
+    
+    if (results.githubPR?.hasUnresolvedItems) {
+      const confidence = Math.round(results.githubPR.resolutionConfidence * 100);
+      parts.push(`⚠️ ${results.githubPR.unresolvedCount} PR items unresolved (${confidence}% confidence)`);
+    } else if (results.githubPR && results.githubPR.resolutionConfidence >= 0.8) {
+      parts.push(`✅ PR comments addressed (${Math.round(results.githubPR.resolutionConfidence * 100)}% confidence)`);
+    } else if (results.githubPR) {
+      parts.push(`🟡 PR partially addressed (${Math.round(results.githubPR.resolutionConfidence * 100)}% confidence)`);
+    }
+    
     if (results.watching) parts.push('🔍 File watching active');
 
     return parts.join(' | ');
   }
 
-  private formatTestSuiteSummary(results: any, errors: any, success: boolean, includeE2E: boolean): string {
+  private formatTestSuiteSummary(
+    results: any,
+    errors: any,
+    success: boolean,
+    includeE2E: boolean,
+  ): string {
     if (!success) {
       const errorCount = Object.keys(errors).length;
       return `❌ Test suite failed (${errorCount} errors)`;
     }
 
     const parts = ['🧪 Test suite complete'];
-    
+
     if (results.testResults) {
       const testCount = results.testResults.results?.length || 0;
       parts.push(`${testCount} suites run`);
     }
-    
+
     if (results.coverage) {
       const coverage = results.coverage.coverage?.lines || 0;
       parts.push(`${coverage.toFixed(1)}% coverage`);
     }
-    
+
     if (results.complexity) parts.push('📊 Complexity analyzed');
     if (includeE2E && results.e2e) parts.push('🎭 E2E tests complete');
 
@@ -516,10 +588,19 @@ export class WorkflowOrchestrator {
     }
 
     const parts = ['✅ Pre-commit validation passed'];
-    
+
     if (results.gitStatus?.upToDate) parts.push('Git ready');
     if (results.jiraStatus) parts.push('JIRA validated');
     if (results.environments) parts.push('Environments checked');
+    
+    if (results.githubPR?.hasUnresolvedItems) {
+      parts.push(`⚠️ ${results.githubPR.unresolvedCount} unresolved, ${results.githubPR.partiallyResolvedCount} partial (${Math.round(results.githubPR.resolutionConfidence * 100)}% confidence)`);
+    } else if (results.githubPR && results.githubPR.resolutionConfidence >= 0.8) {
+      parts.push(`PR ready (${Math.round(results.githubPR.resolutionConfidence * 100)}% confidence)`);
+    } else if (results.githubPR) {
+      parts.push(`PR partially ready (${Math.round(results.githubPR.resolutionConfidence * 100)}% confidence)`);
+    }
+    
     if (results.commitMessage) parts.push('Commit message ready');
 
     return parts.join(' | ');
@@ -528,7 +609,7 @@ export class WorkflowOrchestrator {
   private formatHealthCheckSummary(results: any, errors: any, success: boolean): string {
     const totalChecks = Object.keys(results).length + Object.keys(errors).length;
     const successfulChecks = Object.keys(results).length;
-    
+
     if (success) {
       return `💚 Health check passed (${successfulChecks}/${totalChecks} checks successful)`;
     } else {

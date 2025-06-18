@@ -31,13 +31,13 @@ export class MCPIntegration extends EventEmitter {
 
     try {
       console.log(chalk.blue('🔌 Connecting to MCP...'));
-      
+
       // Load available MCP tools
       await this.loadAvailableTools();
-      
+
       this.connected = true;
       console.log(chalk.green('✅ MCP connected successfully'));
-      
+
       return true;
     } catch (error) {
       console.error(chalk.red('Failed to connect to MCP'), error);
@@ -82,7 +82,7 @@ export class MCPIntegration extends EventEmitter {
 
     try {
       console.log(chalk.gray(`Calling MCP tool: ${toolName}`));
-      
+
       // In a real implementation, this would make the actual MCP call
       // For now, we'll simulate the response
       switch (toolName) {
@@ -91,19 +91,19 @@ export class MCPIntegration extends EventEmitter {
             success: true,
             data: { navigated: true, url: params.url },
           };
-          
+
         case 'mcp__stagehand__stagehand_act':
           return {
             success: true,
             data: { action: params.action, completed: true },
           };
-          
+
         case 'mcp__stagehand__screenshot':
           return {
             success: true,
             data: { screenshot: 'base64_encoded_image_data' },
           };
-          
+
         default:
           return {
             success: false,
@@ -118,7 +118,10 @@ export class MCPIntegration extends EventEmitter {
     }
   }
 
-  async runStagehandScenario(steps: string[], baseUrl?: string): Promise<{
+  async runStagehandScenario(
+    steps: string[],
+    baseUrl?: string,
+  ): Promise<{
     success: boolean;
     screenshots: string[];
     errors: string[];
@@ -136,7 +139,7 @@ export class MCPIntegration extends EventEmitter {
 
     for (const [index, step] of steps.entries()) {
       console.log(chalk.cyan(`  Step ${index + 1}: ${step}`));
-      
+
       // Take screenshot before action
       const screenshotBefore = await this.callTool('mcp__stagehand__screenshot', {});
       if (screenshotBefore.success && screenshotBefore.data) {
@@ -167,7 +170,7 @@ export class MCPIntegration extends EventEmitter {
     // This would use an MCP tool to communicate with JIRA through an LLM
     // The LLM would interpret the query and fetch the appropriate JIRA data
     console.log(chalk.blue(`🎫 Querying JIRA via MCP: ${query}`));
-    
+
     // Simulate the response
     return {
       success: true,
@@ -197,7 +200,7 @@ ${context.description ? `Description: ${context.description}` : ''}`;
 
     // In a real implementation, this would call an MCP action
     const response = await this.callTool(this.config.actionName, { prompt });
-    
+
     if (response.success && response.data) {
       return response.data.message || 'Update files';
     }
@@ -212,7 +215,7 @@ ${context.description ? `Description: ${context.description}` : ''}`;
 
     try {
       console.log(chalk.blue('📝 Registering test-running agent with Cursor MCP...'));
-      
+
       // This would create/update the MCP registration file
       const registration = {
         name: 'test-running-agent',
@@ -248,7 +251,7 @@ ${context.description ? `Description: ${context.description}` : ''}`;
       // Write registration to the specified path
       console.log(chalk.green('✅ MCP registration created successfully'));
       console.log(chalk.gray(`Registration path: ${this.config.registrationPath}`));
-      
+
       return true;
     } catch (error) {
       console.error(chalk.red('Failed to register with Cursor MCP'), error);
@@ -257,7 +260,7 @@ ${context.description ? `Description: ${context.description}` : ''}`;
   }
 
   isToolAvailable(toolName: string): boolean {
-    return this.availableTools.some(tool => tool.name === toolName);
+    return this.availableTools.some((tool) => tool.name === toolName);
   }
 
   getAvailableTools(): MCPTool[] {

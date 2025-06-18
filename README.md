@@ -49,6 +49,199 @@ All comprehensive documentation is available in the [`/documentation`](./documen
 |----------|-------------|
 | **[⚡ MCP Quick Reference](./documentation/MCP_QUICK_REFERENCE.md)** | Essential MCP commands for quick access |
 
+## 🔍 Debug UI
+
+The Test Running Agent includes a comprehensive web-based debug interface that provides real-time monitoring, configuration management, and interactive control of your test automation.
+
+### 🚀 Quick Start with Debug UI
+
+```bash
+# Start the agent with debug UI enabled
+test-agent start --debug
+
+# Or specify a custom port
+test-agent start --debug --debug-port 3002
+```
+
+The debug UI will be available at `http://localhost:3001` (or your specified port).
+
+### 📊 Debug UI Features
+
+#### 🤖 Agent Status & Control
+- **Real-time Status**: View agent running state, file watching status, and last activity
+- **System Metrics**: Monitor CPU, memory, and disk usage
+- **Quick Actions**: Start, stop, and restart the agent from the web interface
+- **Connection Status**: See Cursor IDE and WebSocket connection status
+
+#### ⚙️ Configuration Management
+- **Visual Editor**: Modify all configuration settings through a user-friendly interface
+- **Secrets Management**: Securely input and manage API keys for:
+  - Sentry DSN for error tracking
+  - PostHog API key for analytics
+  - JIRA credentials for issue tracking
+  - Slack webhook URLs for notifications
+- **Feature Toggles**: Enable/disable integrations with visual toggles
+- **Real-time Updates**: Configuration changes are applied immediately
+
+#### 🧪 Test Management
+- **Test Results**: View detailed test execution results with timestamps
+- **Coverage Metrics**: Monitor coverage percentages and trends
+- **Test Filtering**: Filter results by test suite, status, or time range
+- **Manual Test Execution**: Trigger specific test suites on demand
+
+#### 🖥️ Real-time Console
+- **Live Output**: Stream agent output in real-time with terminal-style interface
+- **Log Filtering**: Filter by log level (error, warn, info, debug, success)
+- **Message History**: Persistent log history with timestamps
+- **Export Logs**: Download console output as JSON
+
+#### 📋 Advanced Logging
+- **Structured Logs**: View detailed logs with component-based organization
+- **Search & Filter**: Search through logs and filter by component or level
+- **Log Levels**: Comprehensive logging with proper categorization
+- **Export Capability**: Export logs for analysis or debugging
+
+#### 📊 Performance Metrics
+- **Test Performance**: Average test duration, success rates, and throughput
+- **Coverage Analysis**: Coverage trends, critical path analysis, and file statistics
+- **System Performance**: Resource utilization and performance bottlenecks
+- **Error Analysis**: Error frequency, types, and resolution tracking
+
+#### 💬 AI Assistant
+- **Natural Language Interface**: Interact with the agent using plain English
+- **Quick Actions**: Pre-built prompts for common operations
+- **Smart Responses**: Get detailed information about test status, coverage, and errors
+- **Command History**: Track your interactions with the agent
+
+### 🔐 Security Features
+
+- **Local Only**: Debug UI runs locally and doesn't expose sensitive data
+- **Secrets Masking**: API keys and tokens are properly masked in the interface
+- **Session Management**: Secure WebSocket connections with automatic reconnection
+- **Input Validation**: All configuration inputs are validated before saving
+
+### 🛠️ Technical Details
+
+#### Architecture
+- **Frontend**: React with TypeScript and shadcn/ui components
+- **Backend**: Express.js server with WebSocket support
+- **Real-time Updates**: WebSocket connections for live data streaming
+- **Build System**: Vite for fast development and optimized builds
+
+#### API Endpoints
+- `GET /api/status` - Agent status and system information
+- `GET /api/config` - Current configuration
+- `PUT /api/config` - Update configuration
+- `POST /api/agent/:action` - Control agent (start/stop/restart)
+- `GET /api/logs` - Retrieve filtered logs
+- `POST /api/run-tests` - Trigger test execution
+- `POST /api/prompt` - Send natural language commands
+
+#### WebSocket Events
+- **Main Connection** (`ws://localhost:3001/ws`): Status updates, config changes, test results
+- **Console Connection** (`ws://localhost:3001/console`): Real-time log streaming
+
+### 📱 Usage Examples
+
+#### Basic Monitoring
+```bash
+# Start with debug UI
+test-agent start --debug
+
+# Open browser to http://localhost:3001
+# Navigate to Status tab to see real-time agent status
+```
+
+#### Configuration Management
+```bash
+# Start debug UI
+test-agent start --debug
+
+# Go to Config tab
+# Add your Sentry DSN: https://your-dsn@sentry.io/project-id
+# Add PostHog API key: phc_your-api-key
+# Enable desired integrations
+# Click Save - changes apply immediately
+```
+
+#### Interactive Testing
+```bash
+# Start debug UI
+test-agent start --debug
+
+# Use AI Chat tab:
+# "Run all unit tests"
+# "Show me the current coverage"
+# "What errors occurred in the last hour?"
+# "Generate a test report"
+```
+
+#### Real-time Debugging
+```bash
+# Start debug UI
+test-agent start --debug
+
+# Monitor Console tab while making code changes
+# Watch real-time test execution and results
+# Filter logs by component or level
+# Export logs when issues occur
+```
+
+### 🎯 Advanced Configuration
+
+#### Custom Port Configuration
+```json
+{
+  "debug": {
+    "enabled": true,
+    "port": 3001,
+    "cors": {
+      "origin": ["http://localhost:3000", "http://localhost:3001"]
+    }
+  }
+}
+```
+
+#### Integration with Monitoring Tools
+
+The debug UI integrates seamlessly with your existing monitoring setup:
+
+- **Sentry**: Error tracking and performance monitoring
+- **PostHog**: User analytics and feature usage tracking
+- **JIRA**: Issue tracking and project management
+- **Slack**: Team notifications and alerts
+
+### 🔧 Troubleshooting Debug UI
+
+#### Common Issues
+
+**Port Already in Use**
+```bash
+# Use a different port
+test-agent start --debug --debug-port 3002
+```
+
+**WebSocket Connection Issues**
+```bash
+# Check firewall settings
+# Ensure port is not blocked
+# Try restarting the agent
+```
+
+**UI Not Loading**
+```bash
+# Ensure debug UI was built
+npm run build:debug
+
+# Check if dist/debug-ui exists
+ls -la dist/debug-ui
+```
+
+**Configuration Not Saving**
+- Check file permissions on config file
+- Ensure JSON syntax is valid
+- Check browser console for errors
+
 ## ⭐ Key Features
 
 ### 🧠 Intelligent Test Execution
@@ -145,6 +338,8 @@ Options:
   -c, --config <path>      Path to configuration file
   -p, --project <path>     Project root directory (default: current directory)
   --cursor-port <port>     Port for Cursor IDE integration (default: 3456)
+  --debug                  Enable debug UI on http://localhost:3001
+  --debug-port <port>      Port for debug UI (default: 3001)
 ```
 
 ### Path Handling
@@ -318,6 +513,62 @@ Enables:
 
 Files matching these paths trigger more comprehensive testing.
 
+#### Error Tracking and Analytics
+```json
+"sentry": {
+  "enabled": true,
+  "dsn": "https://your-dsn@sentry.io/project-id",
+  "environment": "development",
+  "release": "1.0.0",
+  "tracesSampleRate": 0.1,
+  "profilesSampleRate": 0.1,
+  "debug": false
+},
+"posthog": {
+  "enabled": true,
+  "apiKey": "phc_your-api-key-here",
+  "host": "https://app.posthog.com",
+  "enableUserTracking": true,
+  "enableTestTracking": true,
+  "enableErrorTracking": true
+}
+```
+
+Features:
+- **Sentry**: Comprehensive error tracking, performance monitoring, and release tracking
+- **PostHog**: Test execution analytics, user behavior tracking, and feature usage metrics
+- **Debug Context**: Automated error context collection with stack traces and breadcrumbs
+- **Performance Monitoring**: Transaction tracking and performance bottleneck identification
+
+#### GitHub Integration
+```json
+"github": {
+  "enabled": true,
+  "token": "ghp_your-github-personal-access-token",
+  "owner": "your-github-username",
+  "repo": "your-repo-name",
+  "autoDetect": true
+}
+```
+
+Features:
+- **PR Comment Analysis**: Automatically fetches and analyzes pull request comments
+- **Action Item Tracking**: Identifies action items, requested changes, and concerns from PR comments
+- **Resolution Confidence**: Analyzes recent changes against PR comments to determine resolution confidence
+- **Commit Context**: Includes PR context in commit messages automatically
+- **Auto-Detection**: Automatically detects repository information from git remotes when `autoDetect` is true
+
+The GitHub integration analyzes PR comments using keyword detection to categorize them as:
+- **Action Items**: Comments containing words like "please", "fix", "change", "must", "TODO"
+- **Requested Changes**: Inline code review comments requesting specific modifications
+- **Concerns**: Comments mentioning "issue", "problem", "bug", "error", "regression"
+- **Suggestions**: Comments with "consider", "suggest", "recommend", "maybe"
+
+Resolution confidence is calculated based on:
+- File matching between comments and recent changes (70% weight)
+- Keyword analysis in commit messages (30% weight)
+- Provides high (≥80%), moderate (≥50%), or low (<50%) confidence scores
+
 #### Notifications
 ```json
 "notifications": {
@@ -428,6 +679,18 @@ Use `@test-running-agent` followed by the command:
   @test-running-agent compare_complexity file: "src/app.ts"
   ```
 
+- **`check_github_pr`** - Check GitHub PR comments and resolution status
+  ```
+  @test-running-agent check_github_pr
+  @test-running-agent check_github_pr branch: "feature/new-feature"
+  ```
+
+- **`analyze_pr_resolutions`** - Analyze how well recent changes address PR comments
+  ```
+  @test-running-agent analyze_pr_resolutions
+  @test-running-agent analyze_pr_resolutions changedFiles: ["src/app.ts", "src/utils.ts"]
+  ```
+
 ### Example Workflow
 
 1. Start watching files:
@@ -437,17 +700,23 @@ Use `@test-running-agent` followed by the command:
 
 2. Make changes to your code - tests will run automatically
 
-3. Before committing, check git status:
+3. Before committing, check git status and PR comments:
    ```
    @test-running-agent check_git_status
+   @test-running-agent check_github_pr
    ```
 
-4. Generate a commit message:
+4. Verify PR comments are addressed:
+   ```
+   @test-running-agent analyze_pr_resolutions
+   ```
+
+5. Generate a commit message:
    ```
    @test-running-agent generate_commit_message
    ```
 
-5. Stop watching when done:
+6. Stop watching when done:
    ```
    @test-running-agent stop_watching
    ```

@@ -46,27 +46,32 @@ export class JiraIntegration {
     // Default pattern for JIRA tickets like DEV-1234
     const pattern = new RegExp(this.config.branchPattern || '[A-Z]+-\\d+', 'i');
     const match = branch.match(pattern);
-    
+
     return match ? match[0].toUpperCase() : null;
   }
 
   async getTicketDetails(ticketKey: string): Promise<JiraTicket | null> {
-    if (!this.config.enabled || !this.config.baseUrl || !this.config.email || !this.config.apiToken) {
+    if (
+      !this.config.enabled ||
+      !this.config.baseUrl ||
+      !this.config.email ||
+      !this.config.apiToken
+    ) {
       console.log(chalk.yellow('JIRA integration is not properly configured'));
       return null;
     }
 
     try {
       console.log(chalk.blue(`\n🎫 Fetching JIRA ticket: ${ticketKey}`));
-      
+
       // Using curl as a simple way to make the API call
       const command = `curl -s -u ${this.config.email}:${this.config.apiToken} \
         -H "Accept: application/json" \
         "${this.config.baseUrl}/rest/api/2/issue/${ticketKey}?expand=comments"`;
-      
+
       const { stdout } = await execAsync(command);
       const data = JSON.parse(stdout);
-      
+
       const ticket: JiraTicket = {
         key: data.key,
         summary: data.fields.summary,
@@ -78,7 +83,7 @@ export class JiraIntegration {
           created: c.created,
         })),
       };
-      
+
       return ticket;
     } catch (error) {
       console.error(chalk.red(`Failed to fetch JIRA ticket ${ticketKey}`), error);
@@ -88,7 +93,7 @@ export class JiraIntegration {
 
   async checkMissingRequirements(ticket: JiraTicket): Promise<string[]> {
     const issues: string[] = [];
-    
+
     if (!ticket.description) {
       issues.push('Ticket has no description');
       return issues;
@@ -103,8 +108,8 @@ export class JiraIntegration {
       /user story/i,
     ];
 
-    const hasRequirements = requirementPatterns.some(pattern => 
-      ticket.description.match(pattern)
+    const hasRequirements = requirementPatterns.some((pattern) =>
+      ticket.description.match(pattern),
     );
 
     if (!hasRequirements) {
@@ -112,22 +117,24 @@ export class JiraIntegration {
     }
 
     // Check if all comments have been addressed
-    const actionableComments = ticket.comments.filter(comment => {
+    const actionableComments = ticket.comments.filter((comment) => {
       const lowerBody = comment.body.toLowerCase();
-      return lowerBody.includes('please') || 
-             lowerBody.includes('need') ||
-             lowerBody.includes('should') ||
-             lowerBody.includes('must') ||
-             lowerBody.includes('fix') ||
-             lowerBody.includes('change');
+      return (
+        lowerBody.includes('please') ||
+        lowerBody.includes('need') ||
+        lowerBody.includes('should') ||
+        lowerBody.includes('must') ||
+        lowerBody.includes('fix') ||
+        lowerBody.includes('change')
+      );
     });
 
     if (actionableComments.length > 0) {
       issues.push(`Found ${actionableComments.length} potentially unaddressed comments`);
-      
+
       // Show recent actionable comments
       const recentComments = actionableComments.slice(-3);
-      recentComments.forEach(comment => {
+      recentComments.forEach((comment) => {
         const preview = comment.body.substring(0, 100) + (comment.body.length > 100 ? '...' : '');
         issues.push(`  - ${comment.author}: "${preview}"`);
       });
@@ -142,7 +149,7 @@ export class JiraIntegration {
     issues: string[];
   }> {
     const ticketKey = await this.findTicketInBranch();
-    
+
     if (!ticketKey) {
       const branch = await this.getCurrentBranch();
       if (branch && this.config.branchPattern) {
@@ -160,7 +167,7 @@ export class JiraIntegration {
     }
 
     const ticket = await this.getTicketDetails(ticketKey);
-    
+
     if (!ticket) {
       return {
         ticketKey,
@@ -170,7 +177,7 @@ export class JiraIntegration {
     }
 
     const issues = await this.checkMissingRequirements(ticket);
-    
+
     return {
       ticketKey,
       ticket,
@@ -184,7 +191,7 @@ export class JiraIntegration {
     }
 
     const ticket = await this.getTicketDetails(ticketKey);
-    
+
     if (!ticket) {
       return `[${ticketKey}] Update ${changes.length} files`;
     }
@@ -192,7 +199,7 @@ export class JiraIntegration {
     // Generate a smart commit message based on ticket and changes
     const fileTypes = this.categorizeChanges(changes);
     let action = 'Update';
-    
+
     if (fileTypes.includes('test')) {
       action = 'Add tests for';
     } else if (fileTypes.includes('fix')) {
@@ -201,26 +208,25 @@ export class JiraIntegration {
       action = 'Implement';
     }
 
-    const summary = ticket.summary.length > 50 
-      ? ticket.summary.substring(0, 47) + '...'
-      : ticket.summary;
+    const summary =
+      ticket.summary.length > 50 ? ticket.summary.substring(0, 47) + '...' : ticket.summary;
 
     return `[${ticketKey}] ${action} ${summary}`;
   }
 
   private categorizeChanges(files: string[]): string[] {
     const categories: string[] = [];
-    
-    if (files.some(f => f.includes('.test.') || f.includes('.spec.'))) {
+
+    if (files.some((f) => f.includes('.test.') || f.includes('.spec.'))) {
       categories.push('test');
     }
-    if (files.some(f => f.includes('fix') || f.includes('bug'))) {
+    if (files.some((f) => f.includes('fix') || f.includes('bug'))) {
       categories.push('fix');
     }
-    if (files.some(f => f.includes('feat') || f.includes('feature'))) {
+    if (files.some((f) => f.includes('feat') || f.includes('feature'))) {
       categories.push('feat');
     }
-    
+
     return categories;
   }
 }
