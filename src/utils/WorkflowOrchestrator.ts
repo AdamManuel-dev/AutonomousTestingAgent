@@ -382,17 +382,17 @@ export class WorkflowOrchestrator {
         const resolutionAnalysis = await gitHubIntegration.analyzeCommentResolution();
         
         return {
-          pullRequest: analysis.pullRequest,
-          actionItems: analysis.actionItems.length,
-          requestedChanges: analysis.requestedChanges.length,
-          concerns: analysis.concerns.length,
-          suggestions: analysis.suggestions.length,
-          hasUnresolvedItems: resolutionAnalysis.unresolvedCount > 0,
-          resolutionConfidence: resolutionAnalysis.overallConfidence,
-          resolvedCount: resolutionAnalysis.resolvedCount,
-          partiallyResolvedCount: resolutionAnalysis.partiallyResolvedCount,
-          unresolvedCount: resolutionAnalysis.unresolvedCount,
-          resolutions: resolutionAnalysis.resolutions,
+          pullRequest: analysis?.pullRequest || null,
+          actionItems: analysis?.actionItems?.length || 0,
+          requestedChanges: analysis?.requestedChanges?.length || 0,
+          concerns: analysis?.concerns?.length || 0,
+          suggestions: analysis?.suggestions?.length || 0,
+          hasUnresolvedItems: resolutionAnalysis?.unresolvedCount > 0,
+          resolutionConfidence: resolutionAnalysis?.overallConfidence || 0,
+          resolvedCount: resolutionAnalysis?.resolvedCount || 0,
+          partiallyResolvedCount: resolutionAnalysis?.partiallyResolvedCount || 0,
+          unresolvedCount: resolutionAnalysis?.unresolvedCount || 0,
+          resolutions: resolutionAnalysis?.resolutions || [],
         };
       },
       60000,
