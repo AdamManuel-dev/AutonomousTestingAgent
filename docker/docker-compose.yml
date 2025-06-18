@@ -1,0 +1,285 @@
+# Complete Docker Compose setup for Test Running Agent
+
+version: '3.8'
+
+services:
+  # Main test running agent
+  test-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: test-agent
+    restart: unless-stopped
+    volumes:
+      # Mount project directory
+      - ../:/workspace
+      # Persist node_modules to avoid reinstalls
+      - /workspace/node_modules
+      # Mount configuration
+      - ./config/test-agent.config.json:/config/test-agent.config.json:ro
+      # Cache directory
+      - test-cache:/tmp/test-cache
+      # Git cache
+      - git-cache:/home/testrunner/.git
+    environment:
+      - NODE_ENV=production
+      - TEST_AGENT_CONFIG=/config/test-agent.config.json
+      - DATABASE_URL=postgresql://testuser:testpass@postgres:5432/testdb
+      - REDIS_URL=redis://redis:6379
+      - SLACK_WEBHOOK=${SLACK_WEBHOOK}
+    ports:
+      - "3456:3456"  # WebSocket port
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3456/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Development version with hot reload
+  test-agent-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    container_name: test-agent-dev
+    profiles: ["dev"]
+    volumes:
+      - ../:/workspace
+      - node_modules_dev:/workspace/node_modules
+      - npm_cache:/home/developer/.npm
+    environment:
+      - NODE_ENV=development
+      - DEBUG=test-agent:*
+      - FORCE_COLOR=1
+    ports:
+      - "3456:3456"  # WebSocket port
+      - "9229:9229"  # Node.js debugger port
+    networks:
+      - test-network
+    stdin_open: true
+    tty: true
+
+  # PostgreSQL database for integration tests
+  postgres:
+    image: postgres:15-alpine
+    container_name: test-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+      POSTGRES_DB: testdb
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d testdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and session storage
+  redis:
+    image: redis:7-alpine
+    container_name: test-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redispass
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "redispass", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Browser for E2E testing
+  selenium:
+    image: selenium/standalone-chrome:latest
+    container_name: test-selenium
+    restart: unless-stopped
+    shm_size: 2gb
+    environment:
+      - SE_NODE_MAX_SESSIONS=5
+      - SE_NODE_SESSION_TIMEOUT=300
+      - SE_VNC_NO_PASSWORD=1
+    ports:
+      - "4444:4444"  # Selenium Grid
+      - "7900:7900"  # VNC viewer (password: secret)
+    volumes:
+      - /dev/shm:/dev/shm
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/wd/hub/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Mock API server for testing
+  mockserver:
+    image: mockserver/mockserver:latest
+    container_name: test-mockserver
+    restart: unless-stopped
+    environment:
+      MOCKSERVER_LOG_LEVEL: INFO
+      MOCKSERVER_SERVER_PORT: 1080
+    ports:
+      - "1080:1080"
+    volumes:
+      - ./mock-configs:/config:ro
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1080/mockserver/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Notification service
+  notifier:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.notifier
+    container_name: test-notifier
+    restart: unless-stopped
+    environment:
+      - SLACK_WEBHOOK=${SLACK_WEBHOOK}
+      - EMAIL_SMTP_HOST=${EMAIL_SMTP_HOST}
+      - EMAIL_SMTP_USER=${EMAIL_SMTP_USER}
+      - EMAIL_SMTP_PASS=${EMAIL_SMTP_PASS}
+    depends_on:
+      - test-agent
+    networks:
+      - test-network
+
+  # Monitoring and metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: test-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - test-network
+
+  # Visualization dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: test-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - test-network
+
+  # Log aggregation
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: test-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - test-network
+
+  # Log visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    container_name: test-kibana
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - test-network
+
+  # Reverse proxy and load balancer
+  nginx:
+    image: nginx:alpine
+    container_name: test-nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - test-agent
+      - grafana
+      - kibana
+    networks:
+      - test-network
+
+# Named volumes for persistence
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  test-cache:
+    driver: local
+  git-cache:
+    driver: local
+  node_modules_dev:
+    driver: local
+  npm_cache:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+
+# Network for service communication
+networks:
+  test-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

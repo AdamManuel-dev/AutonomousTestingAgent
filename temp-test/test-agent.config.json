@@ -1,0 +1,53 @@
+{
+  "projectRoot": "./my-project",
+  "testSuites": [
+    {
+      "type": "jest",
+      "pattern": [
+        "**/*.test.ts",
+        "**/*.spec.ts"
+      ],
+      "command": "npm test",
+      "coverageCommand": "npm test -- --coverage",
+      "watchPattern": [
+        "src/**/*.ts"
+      ],
+      "priority": 3
+    },
+    {
+      "type": "cypress",
+      "pattern": "cypress/e2e/**/*.cy.ts",
+      "command": "npm run cypress:run",
+      "watchPattern": [
+        "src/**/*.ts",
+        "cypress/**/*.ts"
+      ],
+      "priority": 1
+    },
+    {
+      "type": "storybook",
+      "pattern": "**/*.stories.tsx",
+      "command": "npm run test-storybook",
+      "watchPattern": [
+        "src/**/*.tsx",
+        "**/*.stories.tsx"
+      ],
+      "priority": 2
+    }
+  ],
+  "excludePatterns": [
+    "**/node_modules/**",
+    "**/dist/**"
+  ],
+  "debounceMs": 1000,
+  "cursorPort": 3456,
+  "coverage": {
+    "enabled": true,
+    "thresholds": {
+      "unit": 80,
+      "integration": 70,
+      "e2e": 60
+    },
+    "persistPath": "./coverage"
+  }
+}

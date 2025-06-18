@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # Main test runner service
+  test-runner:
+    build:
+      context: ..
+      dockerfile: ci/Dockerfile
+      target: ci-runner
+    environment:
+      - CI=true
+      - NODE_ENV=test
+      - TEST_AGENT_CONFIG=/workspace/ci/test-agent-ci.config.json
+      - COVERAGE_THRESHOLD=${COVERAGE_THRESHOLD:-80}
+      - BASE_BRANCH=${BASE_BRANCH:-main}
+      - SLACK_WEBHOOK=${SLACK_WEBHOOK}
+      - CODECOV_TOKEN=${CODECOV_TOKEN}
+    volumes:
+      - ..:/workspace
+      - test-cache:/tmp/test-cache
+      - /workspace/node_modules
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - test-network
+    command: ./ci/run-ci-tests.sh
+
+  # Database for integration tests
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pass
+      POSTGRES_DB: test_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching tests
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # API mock server for integration tests
+  mock-server:
+    image: mockserver/mockserver:latest
+    environment:
+      MOCKSERVER_LOG_LEVEL: INFO
+      MOCKSERVER_SERVER_PORT: 1080
+    ports:
+      - "1080:1080"
+    networks:
+      - test-network
+
+  # Browser for E2E tests
+  selenium:
+    image: selenium/standalone-chrome:latest
+    shm_size: 2gb
+    environment:
+      - SE_NODE_MAX_SESSIONS=5
+      - SE_NODE_SESSION_TIMEOUT=300
+    ports:
+      - "4444:4444"
+      - "7900:7900"  # VNC port for debugging
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/wd/hub/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Reporting service
+  reporter:
+    build:
+      context: ..
+      dockerfile: ci/Dockerfile
+      target: reporter
+    environment:
+      - CODECOV_TOKEN=${CODECOV_TOKEN}
+      - SONAR_TOKEN=${SONAR_TOKEN}
+      - SONAR_HOST_URL=${SONAR_HOST_URL}
+    volumes:
+      - ../coverage:/workspace/coverage:ro
+      - ../test-results:/workspace/test-results:ro
+    depends_on:
+      test-runner:
+        condition: service_completed_successfully
+    networks:
+      - test-network
+
+  # Notification service
+  notifier:
+    image: appropriate/curl:latest
+    environment:
+      - SLACK_WEBHOOK=${SLACK_WEBHOOK}
+      - BUILD_URL=${BUILD_URL}
+      - BUILD_NUMBER=${BUILD_NUMBER}
+    volumes:
+      - ../test-results:/results:ro
+    depends_on:
+      test-runner:
+        condition: service_completed_successfully
+    networks:
+      - test-network
+    command: >
+      sh -c "
+        if [ -f /results/summary.json ]; then
+          curl -X POST $${SLACK_WEBHOOK} \
+            -H 'Content-Type: application/json' \
+            -d @/results/slack-message.json
+        fi
+      "
+
+volumes:
+  test-cache:
+  postgres-data:
+  redis-data:
+  
+networks:
+  test-network:
+    driver: bridge

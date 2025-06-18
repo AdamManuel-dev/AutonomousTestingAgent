@@ -1,0 +1,227 @@
+{
+  "projectRoot": ".",
+  "ci": {
+    "enabled": true,
+    "mode": "smart",
+    "parallelJobs": 4,
+    "failFast": true,
+    "testTimeout": 300000,
+    "retryFailedTests": 2
+  },
+  "testSuites": [
+    {
+      "type": "jest",
+      "pattern": ["**/*.test.ts", "**/*.spec.ts"],
+      "command": "npm test",
+      "coverageCommand": "npm test -- --coverage --coverageReporters=json,lcov,text,cobertura",
+      "priority": 3,
+      "ci": {
+        "timeout": 180000,
+        "parallel": true
+      }
+    },
+    {
+      "type": "cypress",
+      "pattern": ["**/*.cy.ts"],
+      "command": "cypress run --headless",
+      "priority": 1,
+      "ci": {
+        "enabled": "${CI_E2E_ENABLED:-false}",
+        "browser": "chrome",
+        "parallel": true,
+        "record": true
+      }
+    },
+    {
+      "type": "postman",
+      "pattern": ["**/*.postman_collection.json"],
+      "command": "newman run",
+      "priority": 2,
+      "ci": {
+        "environment": "${CI_ENVIRONMENT:-staging}",
+        "bail": true
+      }
+    }
+  ],
+  "coverage": {
+    "enabled": true,
+    "thresholds": {
+      "unit": 80,
+      "integration": 70,
+      "e2e": 60,
+      "global": {
+        "statements": 80,
+        "branches": 75,
+        "functions": 80,
+        "lines": 80
+      }
+    },
+    "reporters": ["json", "lcov", "text", "cobertura", "html"],
+    "reportDir": "./coverage",
+    "excludePatterns": [
+      "**/node_modules/**",
+      "**/test/**",
+      "**/*.d.ts",
+      "**/migrations/**",
+      "**/config/**"
+    ],
+    "includePatterns": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+    ],
+    "ci": {
+      "failOnDecrease": true,
+      "deltaThreshold": 5,
+      "uploadToCodecov": "${CODECOV_TOKEN:+true}"
+    }
+  },
+  "complexity": {
+    "enabled": true,
+    "warningThreshold": 10,
+    "errorThreshold": 20,
+    "ci": {
+      "failOnNew": true,
+      "compareWithBase": true,
+      "maxNewComplexity": 15
+    },
+    "excludePatterns": [
+      "**/test/**",
+      "**/*.spec.ts",
+      "**/*.test.ts"
+    ]
+  },
+  "notifications": {
+    "ci": {
+      "enabled": true,
+      "channels": {
+        "slack": {
+          "enabled": "${SLACK_WEBHOOK:+true}",
+          "webhookUrl": "${SLACK_WEBHOOK}",
+          "channel": "${SLACK_CHANNEL:-#ci-notifications}",
+          "mentions": {
+            "failure": ["@here"],
+            "coverageDrop": ["@qa-team"]
+          },
+          "includeArtifacts": true
+        },
+        "email": {
+          "enabled": "${EMAIL_NOTIFICATIONS:-false}",
+          "smtp": {
+            "host": "${SMTP_HOST}",
+            "port": "${SMTP_PORT:-587}",
+            "secure": false,
+            "auth": {
+              "user": "${SMTP_USER}",
+              "pass": "${SMTP_PASS}"
+            }
+          },
+          "recipients": {
+            "failure": ["${TEAM_EMAIL}"],
+            "success": ["${SUCCESS_EMAIL}"]
+          }
+        },
+        "webhook": {
+          "enabled": "${WEBHOOK_URL:+true}",
+          "url": "${WEBHOOK_URL}",
+          "headers": {
+            "Authorization": "Bearer ${WEBHOOK_TOKEN}"
+          }
+        }
+      },
+      "events": {
+        "testFailure": true,
+        "coverageDrop": true,
+        "complexityIncrease": true,
+        "buildSuccess": "${NOTIFY_SUCCESS:-false}"
+      }
+    }
+  },
+  "smartSelection": {
+    "enabled": true,
+    "ci": {
+      "useGitDiff": true,
+      "baseBranch": "${BASE_BRANCH:-main}",
+      "includeRelatedTests": true,
+      "minTestConfidence": 0.8
+    }
+  },
+  "reports": {
+    "ci": {
+      "junit": {
+        "enabled": true,
+        "outputPath": "./test-results/junit.xml"
+      },
+      "html": {
+        "enabled": true,
+        "outputPath": "./test-results/html"
+      },
+      "json": {
+        "enabled": true,
+        "outputPath": "./test-results/summary.json"
+      },
+      "markdown": {
+        "enabled": "${PR_COMMENT:-false}",
+        "outputPath": "./test-results/summary.md",
+        "includeCharts": true
+      }
+    }
+  },
+  "artifacts": {
+    "ci": {
+      "paths": [
+        "coverage/**",
+        "test-results/**",
+        "complexity-report.json"
+      ],
+      "retentionDays": 30
+    }
+  },
+  "environment": {
+    "ci": {
+      "NODE_ENV": "test",
+      "CI": "true",
+      "FORCE_COLOR": "1",
+      "TEST_TIMEOUT": "${TEST_TIMEOUT:-300000}"
+    }
+  },
+  "performance": {
+    "ci": {
+      "maxWorkers": "${CI_MAX_WORKERS:-4}",
+      "cache": {
+        "enabled": true,
+        "path": "/tmp/test-agent-cache",
+        "compression": true
+      },
+      "optimization": {
+        "splitTests": true,
+        "runInBand": "${CI_RUN_IN_BAND:-false}",
+        "detectOpenHandles": false
+      }
+    }
+  },
+  "validation": {
+    "preRun": {
+      "checkDependencies": true,
+      "checkEnvironment": true,
+      "checkConfiguration": true
+    },
+    "postRun": {
+      "validateReports": true,
+      "checkArtifacts": true
+    }
+  },
+  "integrations": {
+    "sonarqube": {
+      "enabled": "${SONAR_TOKEN:+true}",
+      "serverUrl": "${SONAR_HOST_URL}",
+      "token": "${SONAR_TOKEN}",
+      "projectKey": "${SONAR_PROJECT_KEY}"
+    },
+    "datadog": {
+      "enabled": "${DD_API_KEY:+true}",
+      "apiKey": "${DD_API_KEY}",
+      "appKey": "${DD_APP_KEY}",
+      "tags": ["env:ci", "team:${TEAM_NAME}"]
+    }
+  }
+}

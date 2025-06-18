@@ -1,0 +1,87 @@
+{
+  "command": "node",
+  "args": [
+    "/Users/adammanuel/Projects/Agents/FirstAgent/test-running-agent/dist/mcp-server.js"
+  ],
+  "name": "Test Running Agent",
+  "description": "Automated test runner with coverage analysis and multiple integrations",
+  "version": "1.0.0",
+  "capabilities": {
+    "tools": [
+      {
+        "name": "run_tests",
+        "description": "Run test suites based on file changes",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Files that changed"
+            },
+            "coverage": {
+              "type": "boolean",
+              "description": "Enable coverage collection"
+            }
+          }
+        }
+      },
+      {
+        "name": "analyze_coverage",
+        "description": "Analyze test coverage and provide recommendations",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "check_jira",
+        "description": "Check JIRA ticket status and requirements",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "ticketKey": {
+              "type": "string",
+              "description": "JIRA ticket key (optional, will detect from branch)"
+            }
+          }
+        }
+      },
+      {
+        "name": "run_e2e",
+        "description": "Run E2E tests with Stagehand",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "scenario": {
+              "type": "string",
+              "description": "Scenario name or path"
+            },
+            "baseUrl": {
+              "type": "string",
+              "description": "Base URL for testing"
+            }
+          }
+        }
+      },
+      {
+        "name": "check_environments",
+        "description": "Check deployment environments",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "generate_commit_message",
+        "description": "Generate commit message based on changes",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    ]
+  }
+}

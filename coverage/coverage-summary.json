@@ -1,0 +1,106 @@
+{
+  "total": {
+    "lines": {
+      "total": 100,
+      "covered": 65,
+      "skipped": 0,
+      "pct": 65.5
+    },
+    "statements": {
+      "total": 100,
+      "covered": 65,
+      "skipped": 0,
+      "pct": 65.5
+    },
+    "functions": {
+      "total": 20,
+      "covered": 14,
+      "skipped": 0,
+      "pct": 70
+    },
+    "branches": {
+      "total": 40,
+      "covered": 22,
+      "skipped": 0,
+      "pct": 55
+    }
+  },
+  "src/math.ts": {
+    "lines": {
+      "total": 10,
+      "covered": 9,
+      "skipped": 0,
+      "pct": 95
+    },
+    "statements": {
+      "total": 10,
+      "covered": 9,
+      "skipped": 0,
+      "pct": 95
+    },
+    "functions": {
+      "total": 2,
+      "covered": 2,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 2,
+      "covered": 2,
+      "skipped": 0,
+      "pct": 90
+    }
+  },
+  "src/api/auth.ts": {
+    "lines": {
+      "total": 20,
+      "covered": 9,
+      "skipped": 0,
+      "pct": 45
+    },
+    "statements": {
+      "total": 20,
+      "covered": 9,
+      "skipped": 0,
+      "pct": 45
+    },
+    "functions": {
+      "total": 2,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 50
+    },
+    "branches": {
+      "total": 8,
+      "covered": 2,
+      "skipped": 0,
+      "pct": 30
+    }
+  },
+  "src/utils/calculator.ts": {
+    "lines": {
+      "total": 30,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 35
+    },
+    "statements": {
+      "total": 30,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 35
+    },
+    "functions": {
+      "total": 3,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 40
+    },
+    "branches": {
+      "total": 10,
+      "covered": 2,
+      "skipped": 0,
+      "pct": 25
+    }
+  }
+}

@@ -1,0 +1,60 @@
+# Development Dockerfile with hot reload and debugging
+FROM node:18
+
+# Install system dependencies and development tools
+RUN apt-get update && apt-get install -y \
+    git \
+    vim \
+    curl \
+    wget \
+    jq \
+    htop \
+    net-tools \
+    procps \
+    tree \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install global development tools
+RUN npm install -g \
+    nodemon \
+    ts-node \
+    typescript \
+    @types/node \
+    npm-check-updates
+
+# Create development user
+RUN useradd -m -s /bin/bash developer && \
+    echo 'developer ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# Create workspace directory
+WORKDIR /workspace
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies
+RUN npm install
+
+# Change ownership
+RUN chown -R developer:developer /workspace
+
+# Switch to development user
+USER developer
+
+# Expose ports
+EXPOSE 3456 9229
+
+# Development environment variables
+ENV NODE_ENV=development
+ENV DEBUG=test-agent:*
+ENV FORCE_COLOR=1
+
+# Health check for development
+HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:3456/health || exit 1
+
+# Volume for hot reload
+VOLUME ["/workspace"]
+
+# Default command with hot reload and debugging
+CMD ["nodemon", "--inspect=0.0.0.0:9229", "--exec", "ts-node", "src/index.ts"]

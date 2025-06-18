@@ -1,0 +1,153 @@
+{
+  "projectRoot": "/workspace",
+  "docker": {
+    "enabled": true,
+    "containerName": "test-agent",
+    "networkName": "test-network"
+  },
+  "testSuites": [
+    {
+      "type": "jest",
+      "pattern": ["**/*.test.ts", "**/*.spec.ts"],
+      "command": "npm test",
+      "coverageCommand": "npm test -- --coverage",
+      "priority": 3,
+      "docker": {
+        "image": "node:18-alpine",
+        "command": "npm test",
+        "volumes": ["/workspace:/app"],
+        "workdir": "/app"
+      }
+    },
+    {
+      "type": "cypress",
+      "pattern": ["**/*.cy.ts"],
+      "command": "cypress run --headless",
+      "priority": 1,
+      "docker": {
+        "service": "selenium",
+        "browser": "chrome",
+        "baseUrl": "http://test-agent:3456"
+      }
+    },
+    {
+      "type": "postman",
+      "pattern": ["**/*.postman_collection.json"],
+      "command": "newman run",
+      "priority": 2,
+      "docker": {
+        "image": "postman/newman:latest",
+        "environment": {
+          "API_BASE_URL": "http://test-agent:3456",
+          "DB_HOST": "postgres",
+          "REDIS_HOST": "redis"
+        }
+      }
+    }
+  ],
+  "coverage": {
+    "enabled": true,
+    "thresholds": {
+      "unit": 80,
+      "integration": 70,
+      "e2e": 60
+    },
+    "reporters": ["json", "lcov", "text", "html"],
+    "reportDir": "/workspace/coverage",
+    "docker": {
+      "persistPath": "/tmp/test-cache/coverage",
+      "uploadToHost": true
+    }
+  },
+  "complexity": {
+    "enabled": true,
+    "warningThreshold": 10,
+    "errorThreshold": 20,
+    "docker": {
+      "reportPath": "/workspace/complexity-report.json"
+    }
+  },
+  "notifications": {
+    "docker": {
+      "enabled": true,
+      "service": "notifier"
+    },
+    "slack": {
+      "enabled": true,
+      "webhookUrl": "${SLACK_WEBHOOK}",
+      "channel": "#test-results",
+      "username": "Test Agent Docker"
+    },
+    "webhook": {
+      "enabled": false,
+      "url": "http://notifier:8080/webhook"
+    }
+  },
+  "integrations": {
+    "database": {
+      "enabled": true,
+      "type": "postgresql",
+      "host": "postgres",
+      "port": 5432,
+      "database": "testdb",
+      "username": "testuser",
+      "password": "testpass"
+    },
+    "redis": {
+      "enabled": true,
+      "host": "redis",
+      "port": 6379,
+      "password": "redispass"
+    },
+    "selenium": {
+      "enabled": true,
+      "host": "selenium",
+      "port": 4444,
+      "capabilities": {
+        "browserName": "chrome",
+        "version": "latest"
+      }
+    },
+    "mockserver": {
+      "enabled": true,
+      "host": "mockserver",
+      "port": 1080
+    }
+  },
+  "monitoring": {
+    "enabled": true,
+    "prometheus": {
+      "enabled": true,
+      "port": 9090,
+      "metricsPath": "/metrics"
+    },
+    "healthCheck": {
+      "enabled": true,
+      "path": "/health",
+      "interval": 30000
+    }
+  },
+  "fileWatcher": {
+    "docker": {
+      "enabled": true,
+      "pollInterval": 2000,
+      "ignoreInitial": true
+    }
+  },
+  "performance": {
+    "docker": {
+      "maxWorkers": 4,
+      "cache": {
+        "enabled": true,
+        "path": "/tmp/test-cache"
+      }
+    }
+  },
+  "security": {
+    "docker": {
+      "runAsNonRoot": true,
+      "readOnlyRootFilesystem": false,
+      "allowPrivilegeEscalation": false
+    }
+  }
+}

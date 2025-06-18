@@ -1,0 +1,31 @@
+# Simple test Dockerfile
+FROM node:18-alpine
+
+# Install runtime dependencies
+RUN apk add --no-cache git bash curl
+
+# Create working directory
+WORKDIR /workspace
+
+# Copy built application (assuming it's already built locally)
+COPY dist ./dist
+COPY package*.json ./
+
+# Install all dependencies (TypeScript needed for complexity analysis)
+RUN npm ci --ignore-scripts
+
+# Create non-root user
+RUN addgroup -g 1001 -S testrunner && \
+    adduser -S testrunner -u 1001
+
+# Change ownership
+RUN chown -R testrunner:testrunner /workspace
+
+# Switch to non-root user
+USER testrunner
+
+# Expose port
+EXPOSE 3456
+
+# Default command
+CMD ["node", "dist/index.js", "start"]

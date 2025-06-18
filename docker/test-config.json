@@ -1,0 +1,20 @@
+{
+  "projectRoot": "/workspace",
+  "testSuites": [
+    {
+      "type": "jest",
+      "pattern": ["**/*.test.js"],
+      "command": "echo 'Running Jest tests...'",
+      "enabled": true
+    }
+  ],
+  "coverage": {
+    "enabled": false
+  },
+  "complexity": {
+    "enabled": false
+  },
+  "notifications": {
+    "enabled": false
+  }
+}

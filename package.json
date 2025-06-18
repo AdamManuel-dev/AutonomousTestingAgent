@@ -1,0 +1,50 @@
+{
+  "name": "test-running-agent",
+  "version": "1.0.0",
+  "description": "Automated test runner agent that monitors file changes and runs appropriate test suites",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "lint": "eslint src --ext .ts",
+    "test": "jest",
+    "install-mcp": "node install-mcp.js",
+    "uninstall-mcp": "node install-mcp.js uninstall",
+    "postinstall": "npm run build"
+  },
+  "keywords": ["test", "automation", "jest", "cypress", "storybook", "file-watcher"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "minimatch": "^9.0.3",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "execa": "^8.0.1",
+    "debounce": "^2.0.0",
+    "ws": "^8.16.0",
+    "node-fetch": "^3.3.2",
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "@types/ws": "^8.5.10",
+    "@types/debounce": "^1.2.4",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-prettier": "^5.1.3",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.12",
+    "prettier": "^3.2.5",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
+}
