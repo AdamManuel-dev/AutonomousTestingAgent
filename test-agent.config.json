@@ -1,0 +1,193 @@
+{
+  "projectRoot": "/Users/adammanuel/Projects/Agents/test-running-agent",
+  "testSuites": [
+    {
+      "type": "jest",
+      "pattern": [
+        "**/*.test.ts",
+        "**/*.spec.ts"
+      ],
+      "command": "npm test",
+      "coverageCommand": "npm test -- --coverage",
+      "watchPattern": [
+        "src/**/*.ts"
+      ],
+      "priority": 3,
+      "enabled": true
+    },
+    {
+      "type": "cypress",
+      "pattern": [
+        "cypress/e2e/**/*.cy.ts"
+      ],
+      "command": "npm run cypress:run",
+      "watchPattern": [
+        "src/**/*.ts",
+        "cypress/**/*.ts"
+      ],
+      "priority": 1,
+      "enabled": true
+    },
+    {
+      "type": "storybook",
+      "pattern": [
+        "**/*.stories.tsx"
+      ],
+      "command": "npm run test-storybook",
+      "watchPattern": [
+        "src/**/*.tsx",
+        "**/*.stories.tsx"
+      ],
+      "priority": 2,
+      "enabled": true
+    },
+    {
+      "type": "postman",
+      "pattern": [
+        "**/*.postman_collection.json"
+      ],
+      "command": "npx newman run",
+      "enabled": false
+    },
+    {
+      "type": "stagehand",
+      "pattern": [
+        "e2e/**/*.scenario.json"
+      ],
+      "command": "stagehand run",
+      "enabled": false
+    }
+  ],
+  "excludePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.git/**",
+    "**/coverage/**",
+    "**/.next/**",
+    "**/.cache/**"
+  ],
+  "debounceMs": 1000,
+  "coverage": {
+    "enabled": true,
+    "thresholds": {
+      "unit": 80,
+      "integration": 70,
+      "e2e": 60
+    },
+    "persistPath": "/Users/adammanuel/Projects/Agents/test-running-agent/coverage"
+  },
+  "cursorPort": 3456,
+  "criticalPaths": {
+    "enabled": true,
+    "paths": [
+      "src/api/auth",
+      "src/api/payment",
+      "src/services/security"
+    ],
+    "patterns": [
+      "**/auth/**",
+      "**/payment/**",
+      "**/security/**"
+    ]
+  },
+  "postman": {
+    "enabled": false,
+    "collections": [
+      "/Users/adammanuel/Projects/Agents/test-running-agent/postman/collection.json",
+      "/Users/adammanuel/Projects/Agents/test-running-agent/postman/auth-tests.json"
+    ],
+    "environment": "/Users/adammanuel/Projects/Agents/test-running-agent/postman/environment.json",
+    "globals": "/Users/adammanuel/Projects/Agents/test-running-agent/postman/globals.json",
+    "iterationCount": 1
+  },
+  "stagehand": {
+    "enabled": false,
+    "baseUrl": "http://localhost:3000",
+    "scenariosPath": "/Users/adammanuel/Projects/Agents/test-running-agent/e2e/scenarios",
+    "scenarios": [
+      {
+        "name": "User Login Flow",
+        "description": "Test the complete user login process",
+        "steps": [
+          "Navigate to login page",
+          "Type 'testuser@example.com' in email field",
+          "Type password in password field",
+          "Click login button",
+          "Verify dashboard is loaded"
+        ]
+      }
+    ],
+    "promptForClarification": true
+  },
+  "figma": {
+    "enabled": false,
+    "apiToken": "YOUR_FIGMA_API_TOKEN",
+    "projectId": "YOUR_FIGMA_PROJECT_ID",
+    "compareThreshold": 95
+  },
+  "jira": {
+    "enabled": false,
+    "baseUrl": "https://yourcompany.atlassian.net",
+    "email": "your-email@company.com",
+    "apiToken": "YOUR_JIRA_API_TOKEN",
+    "projectKey": "DEV",
+    "branchPattern": "DEV-\\d+"
+  },
+  "environments": {
+    "enabled": false,
+    "checkUrl": "https://api.yourcompany.com/deployments",
+    "notifyOnNonMaster": true
+  },
+  "mcp": {
+    "enabled": false,
+    "registrationPath": "/Users/adammanuel/Projects/Agents/test-running-agent/mcp-registration.json",
+    "actionName": "test-running-agent",
+    "delegateToCursor": true
+  },
+  "notifications": {
+    "enabled": true,
+    "consoleOutput": true,
+    "systemNotifications": false,
+    "webSocket": true,
+    "slack": {
+      "webhookUrl": "",
+      "channel": "#test-notifications"
+    }
+  },
+  "complexity": {
+    "enabled": false,
+    "warningThreshold": 10,
+    "errorThreshold": 20,
+    "includePatterns": [],
+    "excludePatterns": [
+      "**/test/**",
+      "**/*.spec.ts",
+      "**/*.test.ts"
+    ]
+  },
+  "sentry": {
+    "enabled": false,
+    "dsn": "YOUR_SENTRY_DSN",
+    "environment": "development",
+    "release": "1.0.0",
+    "tracesSampleRate": 0.1,
+    "profilesSampleRate": 0.1,
+    "debug": false
+  },
+  "posthog": {
+    "enabled": false,
+    "apiKey": "YOUR_POSTHOG_API_KEY",
+    "host": "https://app.posthog.com",
+    "enableUserTracking": true,
+    "enableTestTracking": true,
+    "enableErrorTracking": true
+  },
+  "github": {
+    "enabled": false,
+    "token": "YOUR_GITHUB_TOKEN",
+    "owner": "YOUR_GITHUB_USERNAME_OR_ORG",
+    "repo": "YOUR_REPO_NAME",
+    "autoDetect": true
+  }
+}

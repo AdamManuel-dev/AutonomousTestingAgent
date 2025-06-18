@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import { EnvironmentConfig } from '../types/index.js';
 
+// TEST CHANGE
+
 interface Environment {
   name: string;
   branch: string;

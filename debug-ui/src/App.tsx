@@ -31,7 +31,7 @@ const App: React.FC = () => {
   useEffect(() => {
     // Connect to WebSocket for real-time updates
     const websocket = new WebSocket('ws://localhost:3001/ws');
-    
+
     websocket.onopen = () => {
       console.log('Connected to debug server');
       setWs(websocket);
@@ -63,22 +63,22 @@ const App: React.FC = () => {
   const handleWebSocketMessage = (data: any) => {
     switch (data.type) {
       case 'agent-status':
-        setAgentState(prev => ({ ...prev, ...data.payload }));
+        setAgentState((prev) => ({ ...prev, ...data.payload }));
         break;
       case 'test-result':
-        setAgentState(prev => ({
+        setAgentState((prev) => ({
           ...prev,
           testResults: [...(prev.testResults || []), data.payload],
         }));
         break;
       case 'log':
-        setAgentState(prev => ({
+        setAgentState((prev) => ({
           ...prev,
           logs: [...(prev.logs || []), data.payload],
         }));
         break;
       case 'metrics':
-        setAgentState(prev => ({ ...prev, metrics: data.payload }));
+        setAgentState((prev) => ({ ...prev, metrics: data.payload }));
         break;
     }
   };
@@ -87,7 +87,7 @@ const App: React.FC = () => {
     try {
       const response = await fetch('/api/status');
       const status = await response.json();
-      setAgentState(prev => ({ ...prev, ...status }));
+      setAgentState((prev) => ({ ...prev, ...status }));
     } catch (error) {
       console.error('Failed to fetch agent status:', error);
     }
@@ -97,7 +97,7 @@ const App: React.FC = () => {
     try {
       const response = await fetch('/api/config');
       const config = await response.json();
-      setAgentState(prev => ({ ...prev, config }));
+      setAgentState((prev) => ({ ...prev, config }));
     } catch (error) {
       console.error('Failed to fetch config:', error);
     }
@@ -110,10 +110,10 @@ const App: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newConfig),
       });
-      
+
       if (response.ok) {
         const updatedConfig = await response.json();
-        setAgentState(prev => ({ ...prev, config: updatedConfig }));
+        setAgentState((prev) => ({ ...prev, config: updatedConfig }));
       }
     } catch (error) {
       console.error('Failed to update config:', error);
@@ -156,35 +156,29 @@ const App: React.FC = () => {
           </TabsList>
 
           <TabsContent value="status" className="mt-6">
-            <AgentStatus 
-              state={agentState} 
-              onControl={controlAgent}
-            />
+            <AgentStatus state={agentState} onControl={controlAgent} />
           </TabsContent>
-          
+
           <TabsContent value="config" className="mt-6">
-            <ConfigManager 
-              config={agentState.config}
-              onUpdate={updateConfig}
-            />
+            <ConfigManager config={agentState.config} onUpdate={updateConfig} />
           </TabsContent>
-          
+
           <TabsContent value="tests" className="mt-6">
             <TestResults results={agentState.testResults || []} />
           </TabsContent>
-          
+
           <TabsContent value="console" className="mt-6">
             <AgentConsole isConnected={!!ws} />
           </TabsContent>
-          
+
           <TabsContent value="logs" className="mt-6">
             <LogViewer logs={agentState.logs || []} />
           </TabsContent>
-          
+
           <TabsContent value="metrics" className="mt-6">
             <PerformanceMetrics metrics={agentState.metrics} />
           </TabsContent>
-          
+
           <TabsContent value="prompt" className="mt-6">
             <PromptInterface agentRunning={agentState.running} />
           </TabsContent>

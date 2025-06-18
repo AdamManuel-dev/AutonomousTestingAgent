@@ -137,19 +137,19 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">AI Assistant</h1>
-        <div className="flex gap-2">
-          <Badge variant={agentRunning ? 'success' : 'secondary'}>
-            {agentRunning ? 'Agent Online' : 'Agent Offline'}
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold">AI Assistant</h1>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant={agentRunning ? 'success' : 'secondary'} className="text-xs md:text-sm">
+            {agentRunning ? '🤖 Agent Online' : '⚠️ Agent Offline'}
           </Badge>
-          <Button variant="outline" size="sm" onClick={exportChat}>
-            <Download className="w-4 h-4 mr-2" />
+          <Button variant="outline" size="sm" onClick={exportChat} className="text-xs md:text-sm">
+            <Download className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
             Export
           </Button>
-          <Button variant="outline" size="sm" onClick={clearMessages}>
-            <Trash2 className="w-4 h-4 mr-2" />
+          <Button variant="outline" size="sm" onClick={clearMessages} className="text-xs md:text-sm">
+            <Trash2 className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
             Clear
           </Button>
         </div>
@@ -157,19 +157,19 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
 
       {/* Quick Prompts */}
       <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Click on common prompts to get started</CardDescription>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg md:text-xl">Quick Actions</CardTitle>
+          <CardDescription className="text-sm">Click on common prompts to get started</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             {commonPrompts.map((prompt, index) => (
               <Button
                 key={index}
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPrompt(prompt)}
-                className="text-left h-auto p-2 text-wrap"
+                className="text-left h-auto p-3 text-wrap text-xs md:text-sm justify-start hover:bg-accent"
                 disabled={!agentRunning}
               >
                 {prompt}
@@ -181,62 +181,65 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
 
       {/* Chat Interface */}
       <Card className="flex-1">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Terminal className="w-5 h-5" />
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+            <Terminal className="w-4 h-4 md:w-5 md:h-5" />
             Agent Console
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm">
             Interact with the test agent using natural language commands
           </CardDescription>
         </CardHeader>
         <CardContent>
           {/* Messages */}
-          <div className="h-96 overflow-y-auto mb-4 space-y-3 p-4 bg-muted/20 rounded-lg">
+          <div className="h-64 md:h-96 overflow-y-auto mb-4 space-y-3 p-3 md:p-4 bg-muted/20 rounded-lg border scrollbar-thin">
             {messages.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8">
-                <Bot className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-                <p>Start a conversation with the test agent</p>
-                <p className="text-sm">Ask about test status, coverage, or request actions</p>
+              <div className="text-center text-muted-foreground py-8 md:py-12">
+                <Bot className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-4 text-muted-foreground/50" />
+                <p className="text-sm md:text-base">Start a conversation with the test agent</p>
+                <p className="text-xs md:text-sm mt-1">Ask about test status, coverage, or request actions</p>
               </div>
             ) : (
               messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`p-3 rounded-lg border ${getMessageColor(message.type)}`}
+                  className={`p-3 rounded-lg border ${getMessageColor(message.type)} transition-all hover:shadow-sm`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="mt-1">
+                    <div className="mt-1 flex-shrink-0">
                       {getMessageIcon(message.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center justify-between mb-2">
                         <Badge variant="outline" className="text-xs">
                           {message.type}
                         </Badge>
                         <div className="flex items-center gap-1">
                           <span className="text-xs text-muted-foreground">
-                            {new Date(message.timestamp).toLocaleTimeString()}
+                            {new Date(message.timestamp).toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
                           </span>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6"
+                            className="h-6 w-6 hover:bg-background/50"
                             onClick={() => copyMessage(message.content)}
                           >
                             <Copy className="w-3 h-3" />
                           </Button>
                         </div>
                       </div>
-                      <div className="text-sm whitespace-pre-wrap break-words">
+                      <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                         {message.content}
                       </div>
                       {message.metadata && (
-                        <details className="mt-2">
-                          <summary className="text-xs text-muted-foreground cursor-pointer">
-                            View metadata
+                        <details className="mt-3">
+                          <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                            View metadata →
                           </summary>
-                          <pre className="text-xs mt-1 p-2 bg-muted rounded overflow-x-auto">
+                          <pre className="text-xs mt-2 p-2 bg-muted rounded overflow-x-auto border">
                             {JSON.stringify(message.metadata, null, 2)}
                           </pre>
                         </details>
@@ -247,12 +250,12 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
               ))
             )}
             {isLoading && (
-              <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50">
-                <Bot className="w-4 h-4" />
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-muted bg-muted/50">
+                <Bot className="w-4 h-4 animate-pulse" />
                 <div className="flex-1">
                   <Badge variant="outline" className="text-xs mb-1">agent</Badge>
                   <div className="text-sm text-muted-foreground">
-                    <span className="inline-flex items-center gap-1">
+                    <span className="inline-flex items-center gap-2">
                       Thinking...
                       <div className="flex gap-1">
                         <div className="w-1 h-1 bg-current rounded-full animate-pulse" />
@@ -268,28 +271,32 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
           </div>
 
           {/* Input */}
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               placeholder={agentRunning ? "Ask the agent anything..." : "Agent is offline"}
               value={currentPrompt}
               onChange={(e) => setCurrentPrompt(e.target.value)}
               onKeyPress={handleKeyPress}
               disabled={!agentRunning || isLoading}
-              className="flex-1"
+              className="flex-1 text-sm md:text-base"
             />
             <Button
               onClick={sendPrompt}
               disabled={!agentRunning || !currentPrompt.trim() || isLoading}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-sm md:text-base whitespace-nowrap"
+              size="default"
             >
-              <Send className="w-4 h-4" />
-              Send
+              <Send className="w-3 h-3 md:w-4 md:h-4" />
+              {isLoading ? 'Sending...' : 'Send'}
             </Button>
           </div>
 
           {!agentRunning && (
-            <div className="mt-2 text-sm text-muted-foreground">
-              ⚠️ The agent must be running to process prompts
+            <div className="mt-3 p-3 bg-warning/10 border border-warning/20 rounded-lg">
+              <div className="flex items-center gap-2 text-sm text-warning-foreground">
+                <span className="text-base">⚠️</span>
+                <span>The agent must be running to process prompts</span>
+              </div>
             </div>
           )}
         </CardContent>
