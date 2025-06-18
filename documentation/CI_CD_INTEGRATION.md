@@ -1,5 +1,7 @@
 # CI/CD Pipeline Integration Guide
 
+← [Back to README](../README.md) | [📋 Documentation Index](./DOCUMENTATION_INDEX.md)
+
 This guide shows how to integrate the Test Running Agent into your CI/CD pipelines for automated testing, coverage analysis, and code quality checks.
 
 ## Overview

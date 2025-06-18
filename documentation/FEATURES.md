@@ -1,5 +1,7 @@
 # Test Running Agent - Feature Summary
 
+← [Back to README](../README.md) | [📋 Documentation Index](./DOCUMENTATION_INDEX.md)
+
 ## Core Features ✅
 - **Smart Test Detection**: Automatically determines which test suites to run based on file changes
 - **Coverage-Based Decisions**: Uses code coverage data to decide between unit tests and E2E tests

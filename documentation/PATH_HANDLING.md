@@ -1,5 +1,7 @@
 # Path Handling in Test Running Agent
 
+← [Back to README](../README.md) | [📋 Documentation Index](./DOCUMENTATION_INDEX.md)
+
 The test-running agent now supports flexible path handling to work properly when monitoring code in different directories.
 
 ## Features

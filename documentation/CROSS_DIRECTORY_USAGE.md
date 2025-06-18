@@ -1,5 +1,7 @@
 # Cross-Directory Usage Guide
 
+← [Back to README](../README.md) | [📋 Documentation Index](./DOCUMENTATION_INDEX.md)
+
 This guide explains how to use the Test Running Agent to monitor projects in different directories.
 
 ## Overview

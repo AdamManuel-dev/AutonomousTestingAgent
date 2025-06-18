@@ -1,5 +1,7 @@
 # Test Running Agent - Cursor MCP Guide
 
+← [Back to README](../README.md) | [📋 Documentation Index](./DOCUMENTATION_INDEX.md)
+
 This guide helps you use the Test Running Agent MCP tools effectively in Cursor.
 
 ## Overview

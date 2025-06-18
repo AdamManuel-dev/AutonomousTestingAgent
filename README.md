@@ -1,29 +1,79 @@
 # Test Running Agent
 
-An automated test runner that monitors file changes and intelligently runs the appropriate test suites based on code coverage analysis. Supports multiple testing frameworks and integrations with development tools.
+An intelligent automated test runner that monitors file changes and executes appropriate test suites based on coverage analysis, complexity monitoring, and development workflow integration. Features comprehensive support for multiple testing frameworks and seamless integration with development tools.
 
-## Features
+## 🚀 Quick Start
 
-### Core Features
-- 🔍 **Smart Test Detection**: Automatically determines which test suites to run based on file changes
-- 📊 **Coverage-Based Decisions**: Uses code coverage data to decide between unit tests and E2E tests
-- 🎯 **Intelligent Test Selection**: Prioritizes tests based on coverage gaps and file criticality
-- 🚀 **Multiple Test Runners**: Supports Jest, Cypress, Storybook, Postman, and Stagehand
-- 🔌 **Cursor IDE Integration**: Connect to Cursor IDE via WebSocket for real-time test feedback
-- ⚡ **Fast & Efficient**: Debounced file watching and parallel test execution
-- 🛠️ **Fully Configurable**: All features are optional and configurable
+```bash
+# Install and set up for Cursor IDE
+npm install -g test-running-agent
+test-agent init --interactive
+test-agent install-mcp  # For Cursor integration
 
-### Optional Features
-- 📮 **Postman Integration**: Run API tests from Postman collections
-- 🎭 **Stagehand UI Testing**: Browser automation tests with MCP integration
-- 🎫 **JIRA Integration**: Check ticket completeness and generate commit messages
-- 🌍 **Environment Monitoring**: Track deployment environments and notify about non-master branches
-- 🔄 **Git Integration**: Notify when you need to pull or merge master
-- 🖼️ **Figma Visual Testing**: Compare Storybook components with Figma designs
-- 🤖 **MCP Integration**: Communicate with tools through LLMs
-- 🛤️ **Critical Path Configuration**: Define critical code paths for enhanced testing
-- 📊 **Complexity Analysis**: Calculate cyclomatic complexity and track changes
-- 📁 **Flexible Path Handling**: Monitor projects in different directories with smart config discovery
+# Start monitoring your project
+test-agent start
+```
+
+## 📖 Documentation
+
+All comprehensive documentation is available in the [`/documentation`](./documentation/) folder.
+
+### 📋 Core Documentation
+| Document | Description |
+|----------|-------------|
+| **[📋 Documentation Index](./documentation/DOCUMENTATION_INDEX.md)** | Complete navigation guide and learning paths |
+| **[🚀 Comprehensive Features](./documentation/COMPREHENSIVE_FEATURES.md)** | Complete feature overview and technical details |
+| **[📘 API Reference](./documentation/API_REFERENCE.md)** | MCP commands, CLI usage, and API documentation |
+| **[🎓 Tutorials](./documentation/TUTORIALS.md)** | Step-by-step guides for all use cases |
+| **[🔧 Troubleshooting](./documentation/TROUBLESHOOTING.md)** | Common issues and solutions |
+
+### 🔧 Setup & Configuration
+| Document | Description |
+|----------|-------------|
+| **[⚙️ Configuration Reference](./documentation/CONFIGURATION_REFERENCE.md)** | Complete configuration guide with all options |
+| **[🎯 Cursor MCP Guide](./documentation/CURSOR_MCP_GUIDE.md)** | Cursor IDE integration and MCP commands |
+| **[📁 Path Handling](./documentation/PATH_HANDLING.md)** | Configuration discovery and path resolution |
+| **[🗂️ Cross Directory Usage](./documentation/CROSS_DIRECTORY_USAGE.md)** | Multi-project monitoring setup |
+
+### 🚀 Advanced Features
+| Document | Description |
+|----------|-------------|
+| **[🔬 Advanced Features](./documentation/ADVANCED_FEATURES.md)** | Deep dive into sophisticated capabilities |
+| **[🤖 MCP Integration Guide](./documentation/MCP_INTEGRATION_GUIDE.md)** | Comprehensive MCP setup and usage |
+| **[🔄 CI/CD Integration](./documentation/CI_CD_INTEGRATION.md)** | GitHub Actions, GitLab CI, Jenkins integration |
+| **[🐳 Docker Guide](./documentation/DOCKER_GUIDE.md)** | Docker deployment and containerization |
+| **[📋 Features Overview](./documentation/FEATURES.md)** | High-level feature summary and status |
+
+### 📚 Quick Reference
+| Document | Description |
+|----------|-------------|
+| **[⚡ MCP Quick Reference](./documentation/MCP_QUICK_REFERENCE.md)** | Essential MCP commands for quick access |
+
+## ⭐ Key Features
+
+### 🧠 Intelligent Test Execution
+- **Smart Test Selection**: Coverage-driven test prioritization
+- **Critical Path Detection**: Enhanced testing for important code areas
+- **Multi-Framework Support**: Jest, Cypress, Storybook, Postman, Stagehand
+- **Parallel Execution**: Efficient concurrent test running
+
+### 📊 Code Quality Monitoring
+- **Coverage Analysis**: Comprehensive coverage tracking and trends
+- **Complexity Analysis**: Cyclomatic complexity monitoring with Git comparison
+- **Quality Gates**: Configurable thresholds and automated enforcement
+- **Historical Tracking**: Trend analysis and quality metrics over time
+
+### 🔗 Development Workflow Integration
+- **Cursor IDE**: Real-time integration with WebSocket and MCP
+- **JIRA Integration**: Ticket validation and commit message generation
+- **Git Integration**: Branch status monitoring and conflict detection
+- **Environment Monitoring**: Deployment status tracking
+
+### 🎯 Advanced Testing Features
+- **API Testing**: Postman collection automation
+- **UI Testing**: Natural language Stagehand scenarios
+- **Visual Testing**: Figma design comparison (planned)
+- **Cross-Directory Monitoring**: Flexible project structure support
 
 ## Installation
 
