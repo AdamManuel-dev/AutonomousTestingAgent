@@ -8,6 +8,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { TestRunningAgent } from './Agent.js';
 import { ConfigLoader } from './utils/ConfigLoader.js';
+import { WorkflowOrchestrator } from './utils/WorkflowOrchestrator.js';
 import { FileChange } from './types/index.js';
 import * as path from 'path';
 
@@ -17,6 +18,7 @@ const configPath = process.env.TEST_AGENT_CONFIG || undefined;
 class TestRunningAgentMCPServer {
   private server: Server;
   private agent: TestRunningAgent | null = null;
+  private orchestrator: WorkflowOrchestrator | null = null;
 
   constructor() {
     this.server = new Server(
@@ -39,6 +41,7 @@ class TestRunningAgentMCPServer {
     if (!this.agent) {
       const config = await ConfigLoader.load(configPath, projectPath);
       this.agent = new TestRunningAgent(config);
+      this.orchestrator = new WorkflowOrchestrator(this.agent);
       await this.agent.start();
     }
     return this.agent;
@@ -186,6 +189,56 @@ class TestRunningAgentMCPServer {
                 },
               },
               required: ['file'],
+            },
+          },
+          // Optimized Workflow Tools - Batch multiple operations
+          {
+            name: 'workflow_dev_setup',
+            description: 'Complete development setup workflow that runs all status checks in parallel and starts file watching. Combines check_git_status + check_environments + check_jira + start_watching. Use this at the beginning of your development session.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                projectPath: {
+                  type: 'string',
+                  description: 'Absolute path to project directory to watch (optional)',
+                },
+              },
+            },
+          },
+          {
+            name: 'workflow_test_suite',
+            description: 'Complete testing workflow that runs tests, analyzes coverage, and checks complexity in parallel. Combines run_tests + analyze_coverage + analyze_complexity. Optionally includes E2E tests. Use this for comprehensive testing.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                files: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Array of file paths that changed (e.g., ["src/app.ts", "src/components/Button.tsx"])',
+                },
+                includeE2E: {
+                  type: 'boolean',
+                  description: 'Include end-to-end tests in the workflow',
+                  default: false,
+                },
+              },
+              required: ['files'],
+            },
+          },
+          {
+            name: 'workflow_pre_commit',
+            description: 'Pre-commit validation workflow that checks project status, validates JIRA ticket, and generates commit message. Combines check_git_status + check_jira + check_environments + generate_commit_message. Use this before committing.',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+            },
+          },
+          {
+            name: 'workflow_health_check',
+            description: 'Complete project health check that runs all status checks in parallel. Combines get_status + check_git_status + check_environments + check_jira + analyze_coverage. Use this to get a complete project overview.',
+            inputSchema: {
+              type: 'object',
+              properties: {},
             },
           },
         ],
@@ -587,6 +640,234 @@ class TestRunningAgentMCPServer {
                   ...comparison,
                   summary: `${icon} Complexity: ${comparison.previous} → ${comparison.current} (${changeStr}, ${comparison.percentageChange.toFixed(1)}%)`,
                 }, null, 2),
+              },
+            ],
+          };
+        }
+
+        // Optimized Workflow Tools
+        case 'workflow_dev_setup': {
+          const { projectPath } = request.params.arguments as any;
+          
+          if (!this.orchestrator) {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: 'Orchestrator not initialized',
+                },
+              ],
+            };
+          }
+
+          const result = await this.orchestrator.executeDevSetup(projectPath);
+          
+          let response = `${result.summary}\n\n`;
+          response += `⏱️ Duration: ${result.duration}ms\n\n`;
+          
+          if (result.success) {
+            response += `✅ **Results:**\n`;
+            if (result.results.gitStatus) {
+              response += `• Git: ${result.results.gitStatus.upToDate ? 'Up to date' : 'Needs attention'}\n`;
+            }
+            if (result.results.environments) {
+              response += `• Environments: ${result.results.environments.warnings}\n`;
+            }
+            if (result.results.jiraStatus) {
+              response += `• JIRA: Ticket analyzed\n`;
+            }
+            if (result.results.watching) {
+              response += `• File Watching: Active on ${result.results.finalStatus?.projectRoot || 'project'}\n`;
+            }
+          }
+          
+          if (Object.keys(result.errors).length > 0) {
+            response += `\n⚠️ **Issues:**\n`;
+            Object.entries(result.errors).forEach(([tool, error]) => {
+              response += `• ${tool}: ${error}\n`;
+            });
+          }
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: response,
+              },
+            ],
+          };
+        }
+
+        case 'workflow_test_suite': {
+          const { files = [], includeE2E = false } = request.params.arguments as any;
+          
+          if (!this.orchestrator) {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: 'Orchestrator not initialized',
+                },
+              ],
+            };
+          }
+
+          if (files.length === 0) {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: 'Please provide files to test. Example: files: ["src/app.ts", "src/utils.ts"]',
+                },
+              ],
+            };
+          }
+
+          const result = await this.orchestrator.executeTestSuite(files, includeE2E);
+          
+          let response = `${result.summary}\n\n`;
+          response += `⏱️ Duration: ${result.duration}ms\n\n`;
+          
+          if (result.success) {
+            response += `✅ **Results:**\n`;
+            if (result.results.testResults) {
+              const testCount = result.results.testResults.results?.length || 0;
+              response += `• Tests: ${testCount} suites executed\n`;
+            }
+            if (result.results.coverage) {
+              const coverage = result.results.coverage.coverage;
+              response += `• Coverage: ${coverage.lines.toFixed(1)}% lines, ${coverage.branches.toFixed(1)}% branches\n`;
+            }
+            if (result.results.complexity) {
+              response += `• Complexity: Analysis completed\n`;
+            }
+            if (includeE2E && result.results.e2e) {
+              response += `• E2E Tests: Completed\n`;
+            }
+          }
+          
+          if (Object.keys(result.errors).length > 0) {
+            response += `\n⚠️ **Issues:**\n`;
+            Object.entries(result.errors).forEach(([tool, error]) => {
+              response += `• ${tool}: ${error}\n`;
+            });
+          }
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: response,
+              },
+            ],
+          };
+        }
+
+        case 'workflow_pre_commit': {
+          if (!this.orchestrator) {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: 'Orchestrator not initialized',
+                },
+              ],
+            };
+          }
+
+          const result = await this.orchestrator.executePreCommit();
+          
+          let response = `${result.summary}\n\n`;
+          response += `⏱️ Duration: ${result.duration}ms\n\n`;
+          
+          if (result.success) {
+            response += `✅ **Validation Results:**\n`;
+            if (result.results.gitStatus) {
+              response += `• Git Status: ${result.results.gitStatus.upToDate ? 'Ready to commit' : 'Needs attention'}\n`;
+            }
+            if (result.results.jiraStatus) {
+              response += `• JIRA: Ticket validated\n`;
+            }
+            if (result.results.environments) {
+              response += `• Environments: ${result.results.environments.warnings}\n`;
+            }
+            if (result.results.commitMessage) {
+              response += `\n📝 **Generated Commit Message:**\n\`\`\`\n${result.results.commitMessage}\n\`\`\`\n`;
+            }
+          }
+          
+          if (Object.keys(result.errors).length > 0) {
+            response += `\n❌ **Validation Issues:**\n`;
+            Object.entries(result.errors).forEach(([tool, error]) => {
+              response += `• ${tool}: ${error}\n`;
+            });
+          }
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: response,
+              },
+            ],
+          };
+        }
+
+        case 'workflow_health_check': {
+          if (!this.orchestrator) {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: 'Orchestrator not initialized',
+                },
+              ],
+            };
+          }
+
+          const result = await this.orchestrator.executeHealthCheck();
+          
+          let response = `${result.summary}\n\n`;
+          response += `⏱️ Duration: ${result.duration}ms\n\n`;
+          
+          response += `📊 **System Status:**\n`;
+          if (result.results.agentStatus) {
+            const status = result.results.agentStatus;
+            response += `• Agent: ${status.running ? '🟢 Running' : '🔴 Stopped'} on ${status.currentBranch}\n`;
+            response += `• Features: ${status.enabledFeatures.join(', ') || 'Basic'}\n`;
+          }
+          
+          if (result.results.gitStatus) {
+            response += `• Git: ${result.results.gitStatus.upToDate ? '🟢 Up to date' : '🟡 Needs attention'}\n`;
+          }
+          
+          if (result.results.environments) {
+            const envWarnings = result.results.environments.nonMasterEnvironments?.length || 0;
+            response += `• Environments: ${envWarnings === 0 ? '🟢 Clean' : `🟡 ${envWarnings} non-master deployments`}\n`;
+          }
+          
+          if (result.results.jiraStatus) {
+            response += `• JIRA: 🟢 Connected\n`;
+          }
+          
+          if (result.results.coverage) {
+            const coverage = result.results.coverage.coverage.lines;
+            const icon = coverage >= 80 ? '🟢' : coverage >= 60 ? '🟡' : '🔴';
+            response += `• Coverage: ${icon} ${coverage.toFixed(1)}%\n`;
+          }
+          
+          if (Object.keys(result.errors).length > 0) {
+            response += `\n⚠️ **Issues Detected:**\n`;
+            Object.entries(result.errors).forEach(([component, error]) => {
+              response += `• ${component}: ${error}\n`;
+            });
+          }
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: response,
               },
             ],
           };
