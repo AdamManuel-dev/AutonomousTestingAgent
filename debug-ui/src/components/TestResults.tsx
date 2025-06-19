@@ -45,11 +45,11 @@ export const TestResults: React.FC<TestResultsProps> = ({ results }) => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Test Results</h1>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="cursor-pointer">
             <Download className="w-4 h-4 mr-2" />
             Export Results
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="cursor-pointer">
             <Play className="w-4 h-4 mr-2" />
             Run All Tests
           </Button>
@@ -58,7 +58,7 @@ export const TestResults: React.FC<TestResultsProps> = ({ results }) => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="cursor-default stats-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Tests</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
@@ -68,7 +68,7 @@ export const TestResults: React.FC<TestResultsProps> = ({ results }) => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-default stats-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
@@ -78,7 +78,7 @@ export const TestResults: React.FC<TestResultsProps> = ({ results }) => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-default stats-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg Duration</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -88,7 +88,7 @@ export const TestResults: React.FC<TestResultsProps> = ({ results }) => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-default stats-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Failed Tests</CardTitle>
             <XCircle className="h-4 w-4 text-muted-foreground" />
@@ -107,6 +107,7 @@ export const TestResults: React.FC<TestResultsProps> = ({ results }) => {
           variant={filter === 'all' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setFilter('all')}
+          className="cursor-pointer"
         >
           All ({results.length})
         </Button>
@@ -114,6 +115,7 @@ export const TestResults: React.FC<TestResultsProps> = ({ results }) => {
           variant={filter === 'success' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setFilter('success')}
+          className="cursor-pointer"
         >
           Passed ({results.filter(r => r.success).length})
         </Button>
@@ -121,6 +123,7 @@ export const TestResults: React.FC<TestResultsProps> = ({ results }) => {
           variant={filter === 'failed' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setFilter('failed')}
+          className="cursor-pointer"
         >
           Failed ({results.filter(r => !r.success).length})
         </Button>
@@ -128,7 +131,7 @@ export const TestResults: React.FC<TestResultsProps> = ({ results }) => {
 
       {/* Results List */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
+        <Card className="cursor-default">
           <CardHeader>
             <CardTitle>Recent Test Runs</CardTitle>
             <CardDescription>Click on a test to view details</CardDescription>
@@ -177,7 +180,7 @@ export const TestResults: React.FC<TestResultsProps> = ({ results }) => {
         </Card>
 
         {/* Test Details */}
-        <Card>
+        <Card className="cursor-default">
           <CardHeader>
             <CardTitle>Test Details</CardTitle>
             <CardDescription>
@@ -211,7 +214,7 @@ export const TestResults: React.FC<TestResultsProps> = ({ results }) => {
                   <label className="text-sm font-medium">Triggered Files</label>
                   <div className="mt-1 space-y-1">
                     {selectedResult.filesTriggered.map((file, index) => (
-                      <div key={index} className="text-sm bg-muted px-2 py-1 rounded">
+                      <div key={index} className="text-sm bg-muted px-2 py-1 rounded hover:bg-muted/80 transition-colors cursor-pointer">
                         {file}
                       </div>
                     ))}

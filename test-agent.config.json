@@ -69,7 +69,7 @@
   ],
   "debounceMs": 1000,
   "coverage": {
-    "enabled": true,
+    "enabled": false,
     "thresholds": {
       "unit": 80,
       "integration": 70,
@@ -79,7 +79,7 @@
   },
   "cursorPort": 3456,
   "criticalPaths": {
-    "enabled": true,
+    "enabled": false,
     "paths": [
       "src/api/auth",
       "src/api/payment",

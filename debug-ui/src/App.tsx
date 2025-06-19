@@ -55,8 +55,15 @@ const App: React.FC = () => {
     fetchAgentStatus();
     fetchConfig();
 
+    // Set up polling for real-time updates (every 1 second)
+    const pollInterval = setInterval(() => {
+      fetchAgentStatus();
+      fetchMetrics();
+    }, 1000);
+
     return () => {
       websocket.close();
+      clearInterval(pollInterval);
     };
   }, []);
 
@@ -103,6 +110,16 @@ const App: React.FC = () => {
     }
   };
 
+  const fetchMetrics = async () => {
+    try {
+      const response = await fetch('/api/metrics');
+      const metrics = await response.json();
+      setAgentState((prev) => ({ ...prev, metrics }));
+    } catch (error) {
+      console.error('Failed to fetch metrics:', error);
+    }
+  };
+
   const updateConfig = async (newConfig: any) => {
     try {
       const response = await fetch('/api/config', {
@@ -133,7 +150,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-background">
       {/* Connection Status */}
       <div className="fixed top-4 right-4 z-50">
-        <Badge variant={ws ? 'success' : 'destructive'}>
+        <Badge variant={ws ? 'success' : 'destructive'} className={ws ? 'pulse-update' : ''}>
           {ws ? '🟢 Connected' : '🔴 Disconnected'}
         </Badge>
       </div>
@@ -146,13 +163,13 @@ const App: React.FC = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="status">🤖 Status</TabsTrigger>
-            <TabsTrigger value="config">⚙️ Config</TabsTrigger>
-            <TabsTrigger value="tests">🧪 Tests</TabsTrigger>
-            <TabsTrigger value="console">🖥️ Console</TabsTrigger>
-            <TabsTrigger value="logs">📋 Logs</TabsTrigger>
-            <TabsTrigger value="metrics">📊 Metrics</TabsTrigger>
-            <TabsTrigger value="prompt">💬 AI Chat</TabsTrigger>
+            <TabsTrigger value="status" className="cursor-pointer">🤖 Status</TabsTrigger>
+            <TabsTrigger value="config" className="cursor-pointer">⚙️ Config</TabsTrigger>
+            <TabsTrigger value="tests" className="cursor-pointer">🧪 Tests</TabsTrigger>
+            <TabsTrigger value="console" className="cursor-pointer">🖥️ Console</TabsTrigger>
+            <TabsTrigger value="logs" className="cursor-pointer">📋 Logs</TabsTrigger>
+            <TabsTrigger value="metrics" className="cursor-pointer">📊 Metrics</TabsTrigger>
+            <TabsTrigger value="prompt" className="cursor-pointer">💬 AI Chat</TabsTrigger>
           </TabsList>
 
           <TabsContent value="status" className="mt-6">

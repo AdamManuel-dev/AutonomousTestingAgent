@@ -6,7 +6,21 @@ import { TestRunningAgent } from '../../Agent.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-jest.mock('express');
+jest.mock('express', () => {
+  const mockApp = {
+    use: jest.fn(),
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+  };
+  
+  const express = jest.fn(() => mockApp) as any;
+  express.json = jest.fn(() => (req: any, res: any, next: any) => next());
+  express.static = jest.fn(() => (req: any, res: any, next: any) => next());
+  
+  return express;
+});
 jest.mock('ws');
 jest.mock('http');
 jest.mock('fs/promises');
@@ -43,17 +57,8 @@ describe('DebugServer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Mock Express app
-    mockApp = {
-      use: jest.fn(),
-      get: jest.fn(),
-      post: jest.fn(),
-      put: jest.fn(),
-      delete: jest.fn(),
-    };
-    (express as any).mockReturnValue(mockApp);
-    (express.json as any) = jest.fn(() => (req: any, res: any, next: any) => next());
-    (express.static as any) = jest.fn(() => (req: any, res: any, next: any) => next());
+    // Get the mocked express app
+    mockApp = (express as any)();
     
     // Mock HTTP server
     mockHttpServer = {

@@ -37,7 +37,7 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
       timestamp: new Date().toISOString(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setCurrentPrompt('');
     setIsLoading(true);
 
@@ -58,7 +58,7 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
         metadata: result.metadata,
       };
 
-      setMessages(prev => [...prev, agentMessage]);
+      setMessages((prev) => [...prev, agentMessage]);
     } catch (error) {
       const errorMessage: PromptMessage = {
         id: `error-${Date.now()}`,
@@ -67,7 +67,7 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
         timestamp: new Date().toISOString(),
       };
 
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +89,7 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
   };
 
   const exportChat = () => {
-    const chatData = messages.map(msg => ({
+    const chatData = messages.map((msg) => ({
       timestamp: msg.timestamp,
       type: msg.type,
       content: msg.content,
@@ -109,19 +109,27 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
 
   const getMessageIcon = (type: string) => {
     switch (type) {
-      case 'user': return <User className="w-4 h-4" />;
-      case 'agent': return <Bot className="w-4 h-4" />;
-      case 'system': return <Terminal className="w-4 h-4" />;
-      default: return <Terminal className="w-4 h-4" />;
+      case 'user':
+        return <User className="w-4 h-4" />;
+      case 'agent':
+        return <Bot className="w-4 h-4" />;
+      case 'system':
+        return <Terminal className="w-4 h-4" />;
+      default:
+        return <Terminal className="w-4 h-4" />;
     }
   };
 
   const getMessageColor = (type: string) => {
     switch (type) {
-      case 'user': return 'border-blue-200 bg-blue-50';
-      case 'agent': return 'border-green-200 bg-green-50';
-      case 'system': return 'border-red-200 bg-red-50';
-      default: return 'border-gray-200 bg-gray-50';
+      case 'user':
+        return 'border-blue-200 bg-blue-500 text-white';
+      case 'agent':
+        return 'border-green-200 bg-green-500 text-white';
+      case 'system':
+        return 'border-red-200 bg-red-500 text-white';
+      default:
+        return 'border-gray-200 bg-gray-500 text-white';
     }
   };
 
@@ -148,7 +156,12 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
             <Download className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
             Export
           </Button>
-          <Button variant="outline" size="sm" onClick={clearMessages} className="text-xs md:text-sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearMessages}
+            className="text-xs md:text-sm"
+          >
             <Trash2 className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
             Clear
           </Button>
@@ -159,7 +172,9 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg md:text-xl">Quick Actions</CardTitle>
-          <CardDescription className="text-sm">Click on common prompts to get started</CardDescription>
+          <CardDescription className="text-sm">
+            Click on common prompts to get started
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
@@ -197,7 +212,9 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
               <div className="text-center text-muted-foreground py-8 md:py-12">
                 <Bot className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-4 text-muted-foreground/50" />
                 <p className="text-sm md:text-base">Start a conversation with the test agent</p>
-                <p className="text-xs md:text-sm mt-1">Ask about test status, coverage, or request actions</p>
+                <p className="text-xs md:text-sm mt-1">
+                  Ask about test status, coverage, or request actions
+                </p>
               </div>
             ) : (
               messages.map((message) => (
@@ -206,9 +223,7 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
                   className={`p-3 rounded-lg border ${getMessageColor(message.type)} transition-all hover:shadow-sm`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="mt-1 flex-shrink-0">
-                      {getMessageIcon(message.type)}
-                    </div>
+                    <div className="mt-1 flex-shrink-0">{getMessageIcon(message.type)}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
                         <Badge variant="outline" className="text-xs">
@@ -216,9 +231,9 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
                         </Badge>
                         <div className="flex items-center gap-1">
                           <span className="text-xs text-muted-foreground">
-                            {new Date(message.timestamp).toLocaleTimeString([], { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
+                            {new Date(message.timestamp).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
                             })}
                           </span>
                           <Button
@@ -253,7 +268,9 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
               <div className="flex items-center gap-3 p-3 rounded-lg border border-muted bg-muted/50">
                 <Bot className="w-4 h-4 animate-pulse" />
                 <div className="flex-1">
-                  <Badge variant="outline" className="text-xs mb-1">agent</Badge>
+                  <Badge variant="outline" className="text-xs mb-1">
+                    agent
+                  </Badge>
                   <div className="text-sm text-muted-foreground">
                     <span className="inline-flex items-center gap-2">
                       Thinking...
@@ -273,7 +290,7 @@ export const PromptInterface: React.FC<PromptInterfaceProps> = ({ agentRunning }
           {/* Input */}
           <div className="flex flex-col sm:flex-row gap-2">
             <Input
-              placeholder={agentRunning ? "Ask the agent anything..." : "Agent is offline"}
+              placeholder={agentRunning ? 'Ask the agent anything...' : 'Agent is offline'}
               value={currentPrompt}
               onChange={(e) => setCurrentPrompt(e.target.value)}
               onKeyPress={handleKeyPress}

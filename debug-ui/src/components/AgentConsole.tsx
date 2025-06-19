@@ -191,16 +191,17 @@ export const AgentConsole: React.FC<AgentConsoleProps> = ({ isConnected }) => {
             variant="outline"
             size="sm"
             onClick={() => setIsPaused(!isPaused)}
+            className="cursor-pointer"
           >
             {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
             {isPaused ? 'Resume' : 'Pause'}
           </Button>
           
-          <Button variant="outline" size="sm" onClick={exportEntries}>
+          <Button variant="outline" size="sm" onClick={exportEntries} className="cursor-pointer">
             <Download className="w-4 h-4" />
           </Button>
           
-          <Button variant="outline" size="sm" onClick={clearEntries}>
+          <Button variant="outline" size="sm" onClick={clearEntries} className="cursor-pointer">
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
@@ -213,7 +214,7 @@ export const AgentConsole: React.FC<AgentConsoleProps> = ({ isConnected }) => {
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="h-8 rounded border border-input bg-background px-2 text-sm"
+            className="h-8 rounded border border-input bg-background px-2 text-sm cursor-pointer hover:border-primary transition-colors"
           >
             <option value="all">All</option>
             <option value="error">Errors</option>
@@ -229,7 +230,7 @@ export const AgentConsole: React.FC<AgentConsoleProps> = ({ isConnected }) => {
             type="checkbox"
             checked={autoScroll}
             onChange={(e) => setAutoScroll(e.target.checked)}
-            className="rounded"
+            className="rounded cursor-pointer"
           />
           Auto-scroll
         </label>
@@ -252,7 +253,7 @@ export const AgentConsole: React.FC<AgentConsoleProps> = ({ isConnected }) => {
               </div>
             ) : (
               filteredEntries.map((entry) => (
-                <div key={entry.id} className="flex gap-2 hover:bg-gray-900 px-2 py-1 rounded">
+                <div key={entry.id} className="flex gap-2 hover:bg-gray-900 px-2 py-1 rounded transition-colors cursor-default">
                   <span className="text-gray-500 shrink-0 w-16">
                     {new Date(entry.timestamp).toLocaleTimeString().slice(0, -3)}
                   </span>
@@ -271,7 +272,7 @@ export const AgentConsole: React.FC<AgentConsoleProps> = ({ isConnected }) => {
                   
                   {entry.data && (
                     <details className="shrink-0 text-gray-500">
-                      <summary className="cursor-pointer">...</summary>
+                      <summary className="cursor-pointer hover:text-gray-300 transition-colors">...</summary>
                       <pre className="text-xs mt-1 whitespace-pre-wrap max-w-md">
                         {JSON.stringify(entry.data, null, 2)}
                       </pre>
@@ -289,7 +290,7 @@ export const AgentConsole: React.FC<AgentConsoleProps> = ({ isConnected }) => {
         {['error', 'warn', 'success', 'info', 'debug'].map((level) => {
           const count = entries.filter(entry => entry.level === level).length;
           return (
-            <Card key={level}>
+            <Card key={level} className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setFilter(level)}>
               <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm capitalize">{level}</span>

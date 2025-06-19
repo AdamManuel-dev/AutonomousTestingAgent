@@ -80,4 +80,57 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--muted-foreground) / 0.5);
   }
+
+  /* Enhanced interactive elements */
+  .interactive-card {
+    @apply transition-all duration-300 hover:shadow-xl hover:scale-[1.02] cursor-pointer;
+  }
+
+  .interactive-button {
+    @apply transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 cursor-pointer;
+  }
+
+  .interactive-input {
+    @apply transition-all duration-200 hover:border-primary focus:border-primary cursor-pointer;
+  }
+
+  .stats-card {
+    @apply bg-gradient-to-br from-background to-muted/20 backdrop-blur-sm border-2 border-border/50;
+  }
+
+  /* Pulse animation for real-time updates */
+  .pulse-update {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+    }
+  }
+
+  /* Enhanced shadows */
+  .card-shadow {
+    box-shadow: 
+      0 1px 3px 0 rgb(0 0 0 / 0.1),
+      0 1px 2px -1px rgb(0 0 0 / 0.1),
+      0 4px 6px -1px rgb(0 0 0 / 0.1);
+  }
+
+  .card-shadow-lg {
+    box-shadow: 
+      0 4px 6px -1px rgb(0 0 0 / 0.1),
+      0 2px 4px -2px rgb(0 0 0 / 0.1),
+      0 10px 15px -3px rgb(0 0 0 / 0.1);
+  }
+
+  .card-shadow-xl {
+    box-shadow: 
+      0 10px 25px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1),
+      0 20px 25px -5px rgb(0 0 0 / 0.1);
+  }
 }

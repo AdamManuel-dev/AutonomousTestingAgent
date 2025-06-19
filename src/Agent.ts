@@ -593,7 +593,7 @@ export class TestRunningAgent extends EventEmitter {
     }
 
     let commitContext = '';
-    
+
     // Add GitHub PR context if available
     if (this.gitHubIntegration) {
       commitContext = await this.gitHubIntegration.generateCommitContext();
@@ -633,8 +633,8 @@ export class TestRunningAgent extends EventEmitter {
     }
 
     const analysis = await this.gitHubIntegration.analyzePullRequest();
-    
-    const hasUnresolvedComments = 
+
+    const hasUnresolvedComments =
       analysis.actionItems.length > 0 ||
       analysis.requestedChanges.length > 0 ||
       analysis.concerns.length > 0;
@@ -642,7 +642,7 @@ export class TestRunningAgent extends EventEmitter {
     if (hasUnresolvedComments) {
       await this.notificationManager.warning(
         'GitHub PR Comments',
-        `Found ${analysis.actionItems.length} action items, ${analysis.requestedChanges.length} requested changes, and ${analysis.concerns.length} concerns`
+        `Found ${analysis.actionItems.length} action items, ${analysis.requestedChanges.length} requested changes, and ${analysis.concerns.length} concerns`,
       );
     }
 

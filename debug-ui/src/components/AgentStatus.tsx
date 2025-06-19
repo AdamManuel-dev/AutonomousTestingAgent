@@ -34,9 +34,9 @@ export const AgentStatus: React.FC<AgentStatusProps> = ({ state, onControl }) =>
         <h1 className="text-3xl font-bold">Agent Status</h1>
         <div className="flex gap-2">
           <Button
-            variant={running ? "destructive" : "default"}
+            variant={running ? 'destructive' : 'default'}
             onClick={() => onControl(running ? 'stop' : 'start')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 cursor-pointer"
           >
             {running ? <Square className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             {running ? 'Stop' : 'Start'}
@@ -44,7 +44,7 @@ export const AgentStatus: React.FC<AgentStatusProps> = ({ state, onControl }) =>
           <Button
             variant="outline"
             onClick={() => onControl('restart')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
             Restart
@@ -53,14 +53,14 @@ export const AgentStatus: React.FC<AgentStatusProps> = ({ state, onControl }) =>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="cursor-default stats-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Agent Status</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2">
-              <Badge variant={running ? "success" : "destructive"}>
+              <Badge variant={running ? 'success' : 'destructive'}>
                 {running ? 'Running' : 'Stopped'}
               </Badge>
             </div>
@@ -72,13 +72,13 @@ export const AgentStatus: React.FC<AgentStatusProps> = ({ state, onControl }) =>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-default stats-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Cursor Connection</CardTitle>
             <Network className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Badge variant={cursorConnected ? "success" : "secondary"}>
+            <Badge variant={cursorConnected ? 'success' : 'secondary'}>
               {cursorConnected ? 'Connected' : 'Disconnected'}
             </Badge>
           </CardContent>
@@ -86,7 +86,7 @@ export const AgentStatus: React.FC<AgentStatusProps> = ({ state, onControl }) =>
 
         {performance && (
           <>
-            <Card>
+            <Card className="cursor-default stats-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
@@ -99,13 +99,15 @@ export const AgentStatus: React.FC<AgentStatusProps> = ({ state, onControl }) =>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="cursor-default stats-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Error Rate</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{performance.errorRate.toFixed(1)}%</div>
+                <div className="text-2xl font-bold text-red-600">
+                  {performance.errorRate.toFixed(1)}%
+                </div>
               </CardContent>
             </Card>
           </>
@@ -113,7 +115,7 @@ export const AgentStatus: React.FC<AgentStatusProps> = ({ state, onControl }) =>
       </div>
 
       {systemInfo && (
-        <Card>
+        <Card className="cursor-default">
           <CardHeader>
             <CardTitle>System Resources</CardTitle>
             <CardDescription>Real-time system monitoring</CardDescription>
@@ -126,7 +128,9 @@ export const AgentStatus: React.FC<AgentStatusProps> = ({ state, onControl }) =>
                     <Cpu className="w-4 h-4" />
                     CPU Usage
                   </span>
-                  <span className="text-sm text-muted-foreground">{systemInfo.cpu.toFixed(1)}%</span>
+                  <span className="text-sm text-muted-foreground">
+                    {systemInfo.cpu.toFixed(1)}%
+                  </span>
                 </div>
                 <div className="w-full bg-secondary rounded-full h-2">
                   <div
@@ -142,7 +146,9 @@ export const AgentStatus: React.FC<AgentStatusProps> = ({ state, onControl }) =>
                     <HardDrive className="w-4 h-4" />
                     Memory Usage
                   </span>
-                  <span className="text-sm text-muted-foreground">{systemInfo.memory.toFixed(1)}%</span>
+                  <span className="text-sm text-muted-foreground">
+                    {systemInfo.memory.toFixed(1)}%
+                  </span>
                 </div>
                 <div className="w-full bg-secondary rounded-full h-2">
                   <div
@@ -159,7 +165,8 @@ export const AgentStatus: React.FC<AgentStatusProps> = ({ state, onControl }) =>
                     Network
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    ↓{(systemInfo.network.rx / 1024).toFixed(1)}KB/s ↑{(systemInfo.network.tx / 1024).toFixed(1)}KB/s
+                    ↓{(systemInfo.network.rx / 1024).toFixed(1)}KB/s ↑
+                    {(systemInfo.network.tx / 1024).toFixed(1)}KB/s
                   </span>
                 </div>
               </div>
@@ -168,17 +175,25 @@ export const AgentStatus: React.FC<AgentStatusProps> = ({ state, onControl }) =>
         </Card>
       )}
 
-      <Card>
+      <Card className="cursor-default">
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
           <CardDescription>Common debugging operations</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <Button variant="outline" size="sm">Clear Logs</Button>
-            <Button variant="outline" size="sm">Reset Metrics</Button>
-            <Button variant="outline" size="sm">Run Health Check</Button>
-            <Button variant="outline" size="sm">Export Debug Data</Button>
+            <Button variant="outline" size="sm" className="cursor-pointer">
+              Clear Logs
+            </Button>
+            <Button variant="outline" size="sm" className="cursor-pointer">
+              Reset Metrics
+            </Button>
+            <Button variant="outline" size="sm" className="cursor-pointer">
+              Run Health Check
+            </Button>
+            <Button variant="outline" size="sm" className="cursor-pointer">
+              Export Debug Data
+            </Button>
           </div>
         </CardContent>
       </Card>

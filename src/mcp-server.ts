@@ -166,7 +166,8 @@ class TestRunningAgentMCPServer {
                 changedFiles: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: 'Array of changed files to analyze against PR comments (optional, uses git diff)',
+                  description:
+                    'Array of changed files to analyze against PR comments (optional, uses git diff)',
                 },
               },
             },
@@ -551,7 +552,7 @@ class TestRunningAgentMCPServer {
         case 'check_github_pr': {
           const { branch } = request.params.arguments as any;
           const gitHubIntegration = agent['gitHubIntegration'];
-          
+
           if (!gitHubIntegration) {
             return {
               content: [
@@ -565,18 +566,20 @@ class TestRunningAgentMCPServer {
 
           const analysis = await gitHubIntegration.analyzePullRequest(branch);
           const resolutionAnalysis = await gitHubIntegration.analyzeCommentResolution();
-          
+
           return {
             content: [
               {
                 type: 'text',
                 text: JSON.stringify(
                   {
-                    pullRequest: analysis.pullRequest ? {
-                      number: analysis.pullRequest.number,
-                      title: analysis.pullRequest.title,
-                      url: analysis.pullRequest.html_url,
-                    } : null,
+                    pullRequest: analysis.pullRequest
+                      ? {
+                          number: analysis.pullRequest.number,
+                          title: analysis.pullRequest.title,
+                          url: analysis.pullRequest.html_url,
+                        }
+                      : null,
                     summary: {
                       actionItems: analysis.actionItems.length,
                       requestedChanges: analysis.requestedChanges.length,
@@ -604,7 +607,7 @@ class TestRunningAgentMCPServer {
         case 'analyze_pr_resolutions': {
           const { changedFiles } = request.params.arguments as any;
           const gitHubIntegration = agent['gitHubIntegration'];
-          
+
           if (!gitHubIntegration) {
             return {
               content: [
@@ -617,7 +620,7 @@ class TestRunningAgentMCPServer {
           }
 
           const resolutionAnalysis = await gitHubIntegration.analyzeCommentResolution(changedFiles);
-          
+
           return {
             content: [
               {
@@ -631,7 +634,7 @@ class TestRunningAgentMCPServer {
                       unresolved: resolutionAnalysis.unresolvedCount,
                       total: resolutionAnalysis.resolutions.length,
                     },
-                    resolutions: resolutionAnalysis.resolutions.map(r => ({
+                    resolutions: resolutionAnalysis.resolutions.map((r) => ({
                       comment: r.comment.substring(0, 100) + (r.comment.length > 100 ? '...' : ''),
                       type: r.type,
                       confidence: `${Math.round(r.confidence * 100)}%`,
