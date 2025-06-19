@@ -9,6 +9,10 @@
 
 An intelligent automated test runner that monitors file changes and executes appropriate test suites based on coverage analysis, complexity monitoring, and development workflow integration. Features comprehensive support for multiple testing frameworks and seamless integration with development tools.
 
+
+https://github.com/user-attachments/assets/2b704921-1b1f-4848-b3bf-a1196c83388c
+
+
 ## 🚀 Quick Start
 
 ```bash
